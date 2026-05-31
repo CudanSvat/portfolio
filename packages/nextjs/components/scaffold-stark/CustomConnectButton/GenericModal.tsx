@@ -13,15 +13,48 @@ const GenericModal = ({
 }) => {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+
+    const checkbox = document.getElementById(modalId) as HTMLInputElement | null;
+    if (!checkbox) return;
+
+    setIsOpen(checkbox.checked);
+
+    const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "checked");
+    if (descriptor && descriptor.set) {
+      Object.defineProperty(checkbox, "checked", {
+        get() {
+          return descriptor.get?.call(this);
+        },
+        set(val) {
+          descriptor.set?.call(this, val);
+          setIsOpen(val);
+        },
+        configurable: true,
+      });
+    }
+
+    const handleChange = () => {
+      setIsOpen(checkbox.checked);
+    };
+
+    checkbox.addEventListener("change", handleChange);
+
+    return () => {
+      checkbox.removeEventListener("change", handleChange);
+    };
+  }, [modalId]);
 
   if (!mounted) return null;
 
   return createPortal(
-    <label htmlFor={modalId} className="modal backdrop-blur-sm cursor-pointer z-[9999] fixed inset-0 flex items-center justify-center bg-black/60">
+    <label
+      htmlFor={modalId}
+      className={`modal backdrop-blur-sm cursor-pointer z-[9999] fixed inset-0 flex items-center justify-center bg-black/60 ${isOpen ? "modal-open" : ""}`}
+    >
       <label className={`${className} z-[10000]`} style={{ minHeight: "auto" }}>
         {/* dummy input to capture event onclick on modal box */}
         <input className="h-0 w-0 absolute top-0 left-0" aria-hidden="true" tabIndex={-1} />
