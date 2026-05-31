@@ -22,16 +22,22 @@ interface TokenInfo {
   symbol: string;
   decimals: number;
   label: string;
+  logoUri?: string;
   isCustom?: boolean;
 }
 
-const PRELOADED_TOKENS: TokenInfo[] = [
-  { address: "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7", symbol: "ETH", decimals: 18, label: "Ethereum" },
-  { address: "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d", symbol: "STRK", decimals: 18, label: "Starknet Token" },
-  { address: "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8", symbol: "USDC", decimals: 6, label: "USD Coin" },
-  { address: "0x0124aeb495b747201f3140103de5d20b6e3fcfcf8fbdf9d1d17d5c7c77c4f621", symbol: "LORDS", decimals: 18, label: "Lords (Realms)" },
-  { address: "0x0da114eb680457337696c34812f21a981c9a6cc94187f4c202c49924d5d5ecb", symbol: "DAI", decimals: 18, label: "Dai Stablecoin" },
-];
+// AVNU token list shape
+interface AvnuToken {
+  name: string;
+  address: string;
+  symbol: string;
+  decimals: number;
+  logoUri?: string;
+}
+
+// USDC address on Starknet mainnet — used as the price reference
+const USDC_ADDRESS = "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8";
+const AVNU_API = "https://starknet.api.avnu.fi";
 
 interface NFTInfo {
   id: string;
@@ -327,15 +333,15 @@ const Home = () => {
   const [newNFTName, setNewNFTName] = useState("");
 
   const [balances, setBalances] = useState<Record<string, Record<string, number>>>({});
-  const [prices, setPrices] = useState<Record<string, number>>({
-    ETH: 3250.40, STRK: 1.28, USDC: 1.00, LORDS: 0.18, DAI: 1.00,
-  });
+  const [prices, setPrices] = useState<Record<string, number>>({ USDC: 1.00, USDT: 1.00, DAIv0: 1.00, DAI: 1.00 });
+  const [avnuTokens, setAvnuTokens] = useState<TokenInfo[]>([]);
+  const [isLoadingTokens, setIsLoadingTokens] = useState(true);
 
   const allAddresses = useMemo(
     () => (connectedAddress ? [connectedAddress, ...secondaryAddresses] : secondaryAddresses),
     [connectedAddress, secondaryAddresses],
   );
-  const allTokens = useMemo(() => [...PRELOADED_TOKENS, ...customTokens], [customTokens]);
+  const allTokens = useMemo(() => [...avnuTokens, ...customTokens], [avnuTokens, customTokens]);
 
   useEffect(() => {
     const saved = localStorage.getItem("portfolio_theme") as ThemeVariant;
@@ -365,20 +371,64 @@ const Home = () => {
       setCustomTokens([]);
       setCustomNFTs([]);
     }
-    fetch("https://api.coingecko.com/api/v3/simple/price?ids=starknet,ethereum,usd-coin,lords,dai&vs_currencies=usd")
-      .then(r => r.json())
-      .then(data => {
-        setPrices(prev => ({
-          ...prev,
-          ETH: data.ethereum?.usd || prev.ETH,
-          STRK: data.starknet?.usd || prev.STRK,
-          USDC: data["usd-coin"]?.usd || prev.USDC,
-          LORDS: data.lords?.usd || prev.LORDS,
-          DAI: data.dai?.usd || prev.DAI,
-        }));
-      })
-      .catch(() => {});
+    // Load AVNU token list + prices on mount (not wallet-dependent)
   }, [connectedAddress]);
+
+  // Fetch AVNU tokens + prices on mount
+  useEffect(() => {
+    const loadAvnuTokensAndPrices = async () => {
+      setIsLoadingTokens(true);
+      try {
+        // 1. Fetch token list from AVNU
+        const res = await fetch(`${AVNU_API}/swap/v2/tokens?size=100`);
+        const data = await res.json();
+        const rawTokens: AvnuToken[] = data?.content ?? [];
+
+        const mapped: TokenInfo[] = rawTokens.map((t: AvnuToken) => ({
+          address: "0x" + t.address.replace(/^0x0*/,"").padStart(64, "0"),
+          symbol: t.symbol,
+          decimals: t.decimals,
+          label: t.name,
+          logoUri: t.logoUri,
+        }));
+        setAvnuTokens(mapped);
+
+        // 2. Derive USD prices: quote 1 of each token → USDC (6 decimals = 1.000000)
+        const usdcNorm = "0x" + USDC_ADDRESS.replace(/^0x0*/, "").padStart(64, "0");
+        const priceMap: Record<string, number> = { USDC: 1.00, USDT: 1.00 };
+
+        await Promise.all(
+          rawTokens.map(async (t) => {
+            if (t.symbol === "USDC" || t.symbol === "USDT") return;
+            try {
+              // Sell 0.01 tokens to avoid low-liquidity rejections
+              const sellAmt = BigInt(Math.floor(0.01 * 10 ** t.decimals)).toString(16);
+              const tokenNorm = "0x" + t.address.replace(/^0x0*/, "").padStart(64, "0");
+              const qRes = await fetch(
+                `${AVNU_API}/swap/v2/quotes?sellTokenAddress=${tokenNorm}&buyTokenAddress=${usdcNorm}&sellAmount=0x${sellAmt}&size=1`
+              );
+              if (!qRes.ok) return;
+              const qData = await qRes.json();
+              const quote = Array.isArray(qData) ? qData[0] : qData?.content?.[0];
+              if (quote?.buyAmount) {
+                // buyAmount is in USDC (6 decimals), sellAmount is 0.01 token
+                const usdcOut = Number(BigInt(quote.buyAmount)) / 1e6;
+                priceMap[t.symbol] = usdcOut / 0.01; // price per full token
+              }
+            } catch { /* price stays undefined */ }
+          })
+        );
+
+        setPrices(prev => ({ ...prev, ...priceMap }));
+      } catch (e) {
+        console.error("AVNU fetch failed", e);
+      } finally {
+        setIsLoadingTokens(false);
+      }
+    };
+
+    loadAvnuTokensAndPrices();
+  }, []);
 
   const syncToLocalStorage = (sec: string[], tokens: TokenInfo[], nfts: NFTInfo[]) => {
     if (!connectedAddress) return;
@@ -738,43 +788,77 @@ const Home = () => {
                   <h3 className={`text-[10px] uppercase font-black tracking-widest mb-5 ${tc.accentText}`}>
                     Asset Breakdown
                   </h3>
-                  <div className="space-y-2">
-                    {allTokens.map((token, i) => {
-                      const amt = tokenTotals[token.symbol] || 0;
-                      const usd = amt * (prices[token.symbol] || 0);
-                      return (
-                        <div
-                          key={token.symbol}
-                          className={`flex items-center justify-between p-3.5 transition-all group ${tc.rowHover}`}
-                        >
+                  {/* Loading skeleton */}
+                  {isLoadingTokens && (
+                    <div className="space-y-2">
+                      {[...Array(8)].map((_, i) => (
+                        <div key={i} className={`flex items-center justify-between p-3.5 ${tc.rowHover} animate-pulse`}>
                           <div className="flex items-center gap-3">
-                            <div className={`w-2.5 h-2.5 rounded-full ${barColors[i % 5]}`} />
-                            <div>
-                              <div className="font-black text-sm leading-tight">{token.symbol}</div>
-                              <div className={`text-[10px] uppercase tracking-wider ${tc.subtext}`}>{token.label}</div>
+                            <div className="w-8 h-8 rounded-full bg-current opacity-10" />
+                            <div className="space-y-1">
+                              <div className="w-12 h-3 bg-current opacity-10 rounded" />
+                              <div className="w-24 h-2 bg-current opacity-5 rounded" />
                             </div>
                           </div>
-                          <div className="flex items-center gap-4">
-                            <div className="text-right">
-                              <div className="font-black text-sm">{amt.toLocaleString(undefined, { maximumFractionDigits: 5 })}</div>
-                              <div className={`text-xs font-bold ${tc.accentText}`}>
-                                ${usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                              </div>
-                            </div>
-                            {token.isCustom ? (
-                              <button onClick={() => handleRemoveCustomToken(token.symbol)} className="opacity-0 group-hover:opacity-100 p-1.5 hover:text-red-400 transition-all">
-                                <TrashIcon className="w-4 h-4" />
-                              </button>
-                            ) : (
-                              <a href={`https://starkscan.co/token/${token.address}`} target="_blank" rel="noreferrer" className={`opacity-0 group-hover:opacity-100 p-1.5 ${tc.subtext} hover:opacity-80 transition-all`}>
-                                <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                              </a>
-                            )}
+                          <div className="space-y-1 text-right">
+                            <div className="w-16 h-3 bg-current opacity-10 rounded" />
+                            <div className="w-12 h-2 bg-current opacity-5 rounded" />
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
+                      ))}
+                    </div>
+                  )}
+                  {!isLoadingTokens && allTokens.map((token, i) => {
+                    const amt = tokenTotals[token.symbol] || 0;
+                    const usd = amt * (prices[token.symbol] || 0);
+                    const pricePerToken = prices[token.symbol];
+                    return (
+                      <div
+                        key={token.symbol}
+                        className={`flex items-center justify-between p-3.5 transition-all group ${tc.rowHover}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {/* Token logo */}
+                          {token.logoUri ? (
+                            <img
+                              src={token.logoUri}
+                              alt={token.symbol}
+                              className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                            />
+                          ) : (
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 ${barColors[i % 5]} text-white`}>
+                              {token.symbol.slice(0, 2)}
+                            </div>
+                          )}
+                          <div>
+                            <div className="font-black text-sm leading-tight">{token.symbol}</div>
+                            <div className={`text-[10px] uppercase tracking-wider ${tc.subtext}`}>{token.label}</div>
+                            {pricePerToken ? (
+                              <div className={`text-[9px] ${tc.subtext}`}>${pricePerToken.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} / token</div>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <div className="font-black text-sm">{amt.toLocaleString(undefined, { maximumFractionDigits: 5 })}</div>
+                            <div className={`text-xs font-bold ${tc.accentText}`}>
+                              ${usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </div>
+                          </div>
+                          {token.isCustom ? (
+                            <button onClick={() => handleRemoveCustomToken(token.symbol)} className="opacity-0 group-hover:opacity-100 p-1.5 hover:text-red-400 transition-all">
+                              <TrashIcon className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <a href={`https://starkscan.co/token/${token.address}`} target="_blank" rel="noreferrer" className={`opacity-0 group-hover:opacity-100 p-1.5 ${tc.subtext} hover:opacity-80 transition-all`}>
+                              <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Add Custom Token */}
