@@ -14,6 +14,8 @@ import {
   DocumentDuplicateIcon,
   CheckIcon,
   SparklesIcon,
+  EyeIcon,
+  EyeSlashIcon,
 } from "@heroicons/react/24/outline";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -54,6 +56,28 @@ const PRELOADED_NFTS: NFTInfo[] = [
   { id: "p2", name: "Everai Knight #8821", collection: "The Everai", imageUrl: "https://i.imgur.com/83pZszM.png", contractAddress: "0x013c767676767676767676767676767676767676767676767676767676767676", tokenId: "8821" },
   { id: "p3", name: "Starknet.id Domain", collection: "Starknet ID", imageUrl: "https://i.imgur.com/GjT8S0I.png", contractAddress: "0x05dbcf33f2bb2e4cfafab92d021c64264d90071c261e4737d2a55a79ee6fc49e", tokenId: "998212" },
   { id: "p4", name: "Briq Castle Block", collection: "Briq", imageUrl: "https://i.imgur.com/WdG91bH.png", contractAddress: "0x014c878787878787878787878787878787878787878787878787878787878787", tokenId: "1098" },
+];
+
+const DEFAULT_CUSTOM_TOKENS: TokenInfo[] = [
+  {
+    address: "0x03b405a98c9e795d427fe82cdeeeed803f221b52471e3a757574a2b4180793ee",
+    symbol: "BROTHER",
+    decimals: 18,
+    label: "Starknet Brother",
+    logoUri: "https://coin-images.coingecko.com/coins/images/51353/small/IMG-6262.jpg",
+  },
+  {
+    address: "0x02Ab526354a39E7f5D272f327FA94e757df3688188d4a92C6Dc3623Ab79894E2",
+    symbol: "SLAY",
+    decimals: 18,
+    label: "Brother Eli",
+  },
+  {
+    address: "0x00aCc2fA3bb7f6a6726c14D9E142D51fe3984dBfA32B5907e1e76425177875E2",
+    symbol: "SCHIZODIO",
+    decimals: 18,
+    label: "schizodio",
+  }
 ];
 
 type ThemeVariant =
@@ -310,6 +334,9 @@ const THEMES: Record<ThemeVariant, ThemeConfig> = {
 
 const ALL_THEMES = Object.keys(THEMES) as ThemeVariant[];
 
+const DEFAULT_HIDDEN_SYMBOLS = ["ZEND", "SWAY", "UNI", "NSTR", "rETH", "LUSD", "wstETH"];
+const TOKEN_ORDER = ["STRK", "ETH", "WBTC", "USDC", "USDT", "EKUBO", "SLAY", "SCHIZODIO", "BROTHER", "DAI", "DAIv0", "LORDS", "vSTRK"];
+
 const Home = () => {
   const { address: connectedAddress } = useAccount();
   const { provider } = useProvider();
@@ -338,9 +365,7 @@ const Home = () => {
   const [isLoadingTokens, setIsLoadingTokens] = useState(true);
   const [showAllTokens, setShowAllTokens] = useState(false);
 
-  // Priority order — first N symbols appear first, rest are sorted alphabetically
-  const TOKEN_ORDER = ["STRK", "ETH", "WBTC", "USDC", "USDT", "EKUBO", "DAI", "DAIv0", "LORDS", "vSTRK"];
-  const HIDDEN_SYMBOLS = new Set(["ZEND", "SWAY", "UNI", "NSTR", "rETH", "LUSD", "wstETH"]);
+  const [userHiddenSymbols, setUserHiddenSymbols] = useState<string[]>(DEFAULT_HIDDEN_SYMBOLS);
 
   const allAddresses = useMemo(
     () => (connectedAddress ? [connectedAddress, ...secondaryAddresses] : secondaryAddresses),
@@ -359,9 +384,9 @@ const Home = () => {
       return a.symbol.localeCompare(b.symbol);
     });
     if (showAllTokens) return sorted;
-    return sorted.filter(t => !HIDDEN_SYMBOLS.has(t.symbol) || t.isCustom);
+    return sorted.filter(t => !userHiddenSymbols.includes(t.symbol) || t.isCustom);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [avnuTokens, customTokens, showAllTokens]);
+  }, [avnuTokens, customTokens, showAllTokens, userHiddenSymbols]);
 
   useEffect(() => {
     const saved = localStorage.getItem("portfolio_theme") as ThemeVariant;
@@ -375,6 +400,14 @@ const Home = () => {
     toast.success(`${THEMES[theme].emoji} ${THEMES[theme].label} theme applied`);
   };
 
+  const syncToLocalStorage = (sec: string[], tokens: TokenInfo[], nfts: NFTInfo[], hidden: string[]) => {
+    if (!connectedAddress) return;
+    localStorage.setItem(
+      `starknet_portfolio_${connectedAddress.toLowerCase()}`,
+      JSON.stringify({ secondaryAddresses: sec, customTokens: tokens, customNFTs: nfts, userHiddenSymbols: hidden }),
+    );
+  };
+
   useEffect(() => {
     if (!connectedAddress) return;
     const key = `starknet_portfolio_${connectedAddress.toLowerCase()}`;
@@ -383,16 +416,43 @@ const Home = () => {
       try {
         const parsed = JSON.parse(saved);
         setSecondaryAddresses(parsed.secondaryAddresses || []);
-        setCustomTokens(parsed.customTokens || []);
+        setCustomTokens(parsed.customTokens || DEFAULT_CUSTOM_TOKENS);
         setCustomNFTs(parsed.customNFTs || []);
+        setUserHiddenSymbols(parsed.userHiddenSymbols || DEFAULT_HIDDEN_SYMBOLS);
       } catch {}
     } else {
       setSecondaryAddresses([]);
-      setCustomTokens([]);
+      setCustomTokens(DEFAULT_CUSTOM_TOKENS);
       setCustomNFTs([]);
+      setUserHiddenSymbols(DEFAULT_HIDDEN_SYMBOLS);
     }
-    // Load AVNU token list + prices on mount (not wallet-dependent)
   }, [connectedAddress]);
+
+  const fetchTokenPrice = async (symbol: string, address: string, decimals: number) => {
+    try {
+      const usdcNorm = "0x" + USDC_ADDRESS.replace(/^0x0*/, "").padStart(64, "0");
+      const sellAmt = BigInt(Math.floor(0.01 * 10 ** decimals)).toString(16);
+      const tokenNorm = "0x" + address.replace(/^0x0*/, "").padStart(64, "0");
+      const qRes = await fetch(
+        `${AVNU_API}/swap/v2/quotes?sellTokenAddress=${tokenNorm}&buyTokenAddress=${usdcNorm}&sellAmount=0x${sellAmt}&size=1`
+      );
+      if (!qRes.ok) return;
+      const qData = await qRes.json();
+      const quote = Array.isArray(qData) ? qData[0] : qData?.content?.[0];
+      if (quote) {
+        let price = 0;
+        if (quote.sellTokenPriceInUsd !== undefined && quote.sellTokenPriceInUsd !== null) {
+          price = Number(quote.sellTokenPriceInUsd);
+        } else if (quote.buyAmount) {
+          const usdcOut = Number(BigInt(quote.buyAmount)) / 1e6;
+          price = usdcOut / 0.01;
+        }
+        if (price > 0) {
+          setPrices(prev => ({ ...prev, [symbol]: price }));
+        }
+      }
+    } catch {}
+  };
 
   // Fetch AVNU tokens + prices on mount
   useEffect(() => {
@@ -417,11 +477,21 @@ const Home = () => {
         const usdcNorm = "0x" + USDC_ADDRESS.replace(/^0x0*/, "").padStart(64, "0");
         const priceMap: Record<string, number> = { USDC: 1.00, USDT: 1.00 };
 
+        const seenAddresses = new Set<string>();
+        const uniqueTokensToPrice: any[] = [];
+        
+        for (const t of [...rawTokens, ...DEFAULT_CUSTOM_TOKENS]) {
+          const norm = "0x" + t.address.replace(/^0x0*/, "").padStart(64, "0").toLowerCase();
+          if (!seenAddresses.has(norm)) {
+            seenAddresses.add(norm);
+            uniqueTokensToPrice.push(t);
+          }
+        }
+
         await Promise.all(
-          rawTokens.map(async (t) => {
+          uniqueTokensToPrice.map(async (t) => {
             if (t.symbol === "USDC" || t.symbol === "USDT") return;
             try {
-              // Sell 0.01 tokens to avoid low-liquidity rejections
               const sellAmt = BigInt(Math.floor(0.01 * 10 ** t.decimals)).toString(16);
               const tokenNorm = "0x" + t.address.replace(/^0x0*/, "").padStart(64, "0");
               const qRes = await fetch(
@@ -430,10 +500,13 @@ const Home = () => {
               if (!qRes.ok) return;
               const qData = await qRes.json();
               const quote = Array.isArray(qData) ? qData[0] : qData?.content?.[0];
-              if (quote?.buyAmount) {
-                // buyAmount is in USDC (6 decimals), sellAmount is 0.01 token
-                const usdcOut = Number(BigInt(quote.buyAmount)) / 1e6;
-                priceMap[t.symbol] = usdcOut / 0.01; // price per full token
+              if (quote) {
+                if (quote.sellTokenPriceInUsd !== undefined && quote.sellTokenPriceInUsd !== null) {
+                  priceMap[t.symbol] = Number(quote.sellTokenPriceInUsd);
+                } else if (quote.buyAmount) {
+                  const usdcOut = Number(BigInt(quote.buyAmount)) / 1e6;
+                  priceMap[t.symbol] = usdcOut / 0.01;
+                }
               }
             } catch { /* price stays undefined */ }
           })
@@ -449,14 +522,6 @@ const Home = () => {
 
     loadAvnuTokensAndPrices();
   }, []);
-
-  const syncToLocalStorage = (sec: string[], tokens: TokenInfo[], nfts: NFTInfo[]) => {
-    if (!connectedAddress) return;
-    localStorage.setItem(
-      `starknet_portfolio_${connectedAddress.toLowerCase()}`,
-      JSON.stringify({ secondaryAddresses: sec, customTokens: tokens, customNFTs: nfts }),
-    );
-  };
 
   const fetchStarknetBalance = async (prov: any, token: string, user: string) => {
     const tryCall = async (entrypoint: string) => {
@@ -500,6 +565,20 @@ const Home = () => {
     setTimeout(() => setCopiedText(null), 2000);
   };
 
+  const handleToggleHideToken = (symbol: string) => {
+    const isCurrentlyHidden = userHiddenSymbols.includes(symbol);
+    const updated = isCurrentlyHidden
+      ? userHiddenSymbols.filter(s => s !== symbol)
+      : [...userHiddenSymbols, symbol];
+    setUserHiddenSymbols(updated);
+    syncToLocalStorage(secondaryAddresses, customTokens, customNFTs, updated);
+    if (isCurrentlyHidden) {
+      toast.success(`${symbol} is now visible`);
+    } else {
+      toast.success(`${symbol} is now hidden`);
+    }
+  };
+
   const handleAddSecondaryAddress = (e: React.FormEvent) => {
     e.preventDefault();
     if (!connectedAddress) { toast.error("Connect your wallet first!"); return; }
@@ -509,7 +588,7 @@ const Home = () => {
     if (allAddresses.some(a => a.toLowerCase() === formatted)) { toast.error("Already tracked!"); return; }
     const upd = [...secondaryAddresses, formatted];
     setSecondaryAddresses(upd);
-    syncToLocalStorage(upd, customTokens, customNFTs);
+    syncToLocalStorage(upd, customTokens, customNFTs, userHiddenSymbols);
     setNewSecAddress("");
     toast.success("Wallet linked!");
   };
@@ -517,7 +596,7 @@ const Home = () => {
   const handleRemoveSecondaryAddress = (addr: string) => {
     const upd = secondaryAddresses.filter(a => a !== addr);
     setSecondaryAddresses(upd);
-    syncToLocalStorage(upd, customTokens, customNFTs);
+    syncToLocalStorage(upd, customTokens, customNFTs, userHiddenSymbols);
     toast.success("Wallet removed");
   };
 
@@ -531,8 +610,9 @@ const Home = () => {
     const tok: TokenInfo = { address: addr, symbol: sym, decimals: newTokenDecimals, label: `${sym} (Custom)`, isCustom: true };
     const upd = [...customTokens, tok];
     setCustomTokens(upd);
-    syncToLocalStorage(secondaryAddresses, upd, customNFTs);
+    syncToLocalStorage(secondaryAddresses, upd, customNFTs, userHiddenSymbols);
     setPrices(p => ({ ...p, [sym]: 1 }));
+    fetchTokenPrice(sym, addr, newTokenDecimals);
     setNewTokenAddress(""); setNewTokenSymbol(""); setNewTokenDecimals(18);
     toast.success(`${sym} added!`);
   };
@@ -540,7 +620,7 @@ const Home = () => {
   const handleRemoveCustomToken = (sym: string) => {
     const upd = customTokens.filter(t => t.symbol !== sym);
     setCustomTokens(upd);
-    syncToLocalStorage(secondaryAddresses, upd, customNFTs);
+    syncToLocalStorage(secondaryAddresses, upd, customNFTs, userHiddenSymbols);
   };
 
   const handleAddCustomNFT = (e: React.FormEvent) => {
@@ -552,7 +632,7 @@ const Home = () => {
     const nft: NFTInfo = { id: `c_${Date.now()}`, name: newNFTName || `NFT #${tokId}`, collection: "Custom", imageUrl: "https://starknet.quest/assets/quests/starknetid/quest.png", contractAddress: nftAddr, tokenId: tokId, isCustom: true };
     const upd = [...customNFTs, nft];
     setCustomNFTs(upd);
-    syncToLocalStorage(secondaryAddresses, customTokens, upd);
+    syncToLocalStorage(secondaryAddresses, customTokens, upd, userHiddenSymbols);
     setNewNFTAddress(""); setNewNFTTokenId(""); setNewNFTName("");
     toast.success("NFT added!");
   };
@@ -560,7 +640,7 @@ const Home = () => {
   const handleRemoveCustomNFT = (id: string) => {
     const upd = customNFTs.filter(n => n.id !== id);
     setCustomNFTs(upd);
-    syncToLocalStorage(secondaryAddresses, customTokens, upd);
+    syncToLocalStorage(secondaryAddresses, customTokens, upd, userHiddenSymbols);
   };
 
   const tokenTotals = allTokens.reduce((acc, t) => {
@@ -859,22 +939,46 @@ const Home = () => {
                             ) : null}
                           </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
+                        <div className="flex items-center gap-2">
+                          <div className="text-right mr-2">
                             <div className="font-black text-sm">{amt.toLocaleString(undefined, { maximumFractionDigits: 5 })}</div>
                             <div className={`text-xs font-bold ${tc.accentText}`}>
                               ${usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                           </div>
+                          
+                          {/* Eye toggle button to Show/Hide token */}
+                          <button
+                            onClick={() => handleToggleHideToken(token.symbol)}
+                            title={userHiddenSymbols.includes(token.symbol) ? "Show Token" : "Hide Token"}
+                            className="opacity-0 group-hover:opacity-100 p-1.5 hover:text-[#C5A880] transition-all"
+                          >
+                            {userHiddenSymbols.includes(token.symbol) ? (
+                              <EyeIcon className="w-4 h-4 text-emerald-500" />
+                            ) : (
+                              <EyeSlashIcon className="w-4 h-4" />
+                            )}
+                          </button>
+
                           {token.isCustom ? (
-                            <button onClick={() => handleRemoveCustomToken(token.symbol)} className="opacity-0 group-hover:opacity-100 p-1.5 hover:text-red-400 transition-all">
+                            <button
+                              onClick={() => handleRemoveCustomToken(token.symbol)}
+                              title="Delete custom token"
+                              className="opacity-0 group-hover:opacity-100 p-1.5 hover:text-red-400 transition-all"
+                            >
                               <TrashIcon className="w-4 h-4" />
                             </button>
-                          ) : (
-                            <a href={`https://starkscan.co/token/${token.address}`} target="_blank" rel="noreferrer" className={`opacity-0 group-hover:opacity-100 p-1.5 ${tc.subtext} hover:opacity-80 transition-all`}>
-                              <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                            </a>
-                          )}
+                          ) : null}
+
+                          <a
+                            href={`https://voyager.online/token/${token.address}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            title="View on Voyager"
+                            className={`opacity-0 group-hover:opacity-100 p-1.5 ${tc.subtext} hover:opacity-80 transition-all`}
+                          >
+                            <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                          </a>
                         </div>
                       </div>
                     );
@@ -882,16 +986,16 @@ const Home = () => {
                 </div>
 
                 {/* Show / hide low-priority tokens toggle */}
-                {!isLoadingTokens && (
+                {!isLoadingTokens && userHiddenSymbols.length > 0 && (
                   <div className={`pt-3 border-t ${tc.divider}`}>
                     <button
                       onClick={() => setShowAllTokens(v => !v)}
                       className={`w-full flex items-center justify-center gap-2 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${tc.navBtnInactive} hover:opacity-100`}
                     >
                       {showAllTokens ? (
-                        <>▲ Hide less common tokens</>
+                        <>▲ Hide hidden tokens ({userHiddenSymbols.length})</>
                       ) : (
-                        <>▼ Show {HIDDEN_SYMBOLS.size} more tokens (ZEND, SWAY, UNI…)</>
+                        <>▼ Show {userHiddenSymbols.length} hidden tokens ({userHiddenSymbols.slice(0, 3).join(", ")}…)</>
                       )}
                     </button>
                   </div>
@@ -954,7 +1058,7 @@ const Home = () => {
                           </div>
                           <div className={`flex justify-between items-center pt-2 border-t ${tc.divider} text-[10px] font-mono ${tc.subtext}`}>
                             <span>#{nft.tokenId}</span>
-                            <a href={`https://starkscan.co/nft/${nft.contractAddress}/${nft.tokenId}`} target="_blank" rel="noreferrer" className="hover:underline flex items-center gap-1">
+                            <a href={`https://voyager.online/contract/${nft.contractAddress}`} target="_blank" rel="noreferrer" className="hover:underline flex items-center gap-1">
                               View <ArrowTopRightOnSquareIcon className="w-3 h-3" />
                             </a>
                           </div>
