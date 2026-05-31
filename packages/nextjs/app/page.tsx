@@ -726,9 +726,9 @@ const Home = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Preloaded NFTs */}
                     {PRELOADED_NFTS.map((nft) => (
-                      <div key={nft.id} className="bg-[#111827]/40 border border-[#1F2937]/50 rounded-2xl overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
+                      <div key={nft.id} className="bg-[#111827]/40 border border-[#1F2937]/50 hover:border-purple-500/40 hover:shadow-[0_10px_30px_rgba(139,92,246,0.1)] rounded-2xl overflow-hidden transition-all duration-300 flex flex-col justify-between">
                         <div className="h-44 w-full bg-[#070913] relative overflow-hidden">
-                          <img src={nft.imageUrl} alt={nft.name} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                          <img src={nft.imageUrl} alt={nft.name} className="object-cover w-full h-full" />
                           <span className="absolute top-3 left-3 text-[9px] uppercase tracking-wider font-extrabold px-2.5 py-1 bg-cyan-950/80 text-cyan-300 border border-cyan-800/40 rounded-full backdrop-blur-md">Collection</span>
                         </div>
                         <div className="p-4 flex-grow flex flex-col justify-between">
@@ -748,13 +748,13 @@ const Home = () => {
 
                     {/* Custom NFTs */}
                     {customNFTs.map((nft) => (
-                      <div key={nft.id} className="bg-[#111827]/40 border border-[#1F2937]/50 rounded-2xl overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between relative">
+                      <div key={nft.id} className="bg-[#111827]/40 border border-[#1F2937]/50 hover:border-purple-500/40 hover:shadow-[0_10px_30px_rgba(139,92,246,0.1)] rounded-2xl overflow-hidden transition-all duration-300 flex flex-col justify-between relative">
                         <div className="h-44 w-full bg-[#070913] relative overflow-hidden flex justify-center items-center">
-                          <img src={nft.imageUrl} alt={nft.name} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                          <img src={nft.imageUrl} alt={nft.name} className="object-cover w-full h-full" />
                           <span className="absolute top-3 left-3 text-[9px] uppercase tracking-wider font-extrabold px-2.5 py-1 bg-purple-950/80 text-purple-300 border border-purple-800/40 rounded-full backdrop-blur-md font-black">Custom</span>
                           <button
                             onClick={() => handleRemoveCustomNFT(nft.id)}
-                            className="absolute top-3 right-3 p-2 bg-red-950/80 text-red-400 border border-red-800/40 rounded-xl hover:bg-red-700 hover:text-white transition-colors"
+                            className="absolute top-3 right-3 p-2 bg-red-950/80 text-red-400 border border-red-800/40 rounded-xl hover:bg-red-700 hover:text-white transition-colors z-10"
                           >
                             <TrashIcon className="w-4 h-4" />
                           </button>
