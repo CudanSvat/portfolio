@@ -208,7 +208,7 @@ const Home = () => {
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedText(text);
-    toast.success("Address copied to clipboard!");
+    toast.success("Address copied!");
     setTimeout(() => setCopiedText(null), 2000);
   };
 
@@ -241,7 +241,7 @@ const Home = () => {
     setSecondaryAddresses(updatedSec);
     syncToLocalStorage(updatedSec, customTokens, customNFTs);
     setNewSecAddress("");
-    toast.success("Wallet address added to tracking!");
+    toast.success("Wallet linked successfully!");
   };
 
   // Remove Secondary Address
@@ -249,7 +249,7 @@ const Home = () => {
     const updatedSec = secondaryAddresses.filter(addr => addr !== addrToRemove);
     setSecondaryAddresses(updatedSec);
     syncToLocalStorage(updatedSec, customTokens, customNFTs);
-    toast.success("Wallet address removed");
+    toast.success("Wallet link removed");
   };
 
   // Add Custom Token Handler
@@ -364,110 +364,102 @@ const Home = () => {
   }, 0);
 
   return (
-    <div className="flex-grow text-slate-100 min-h-screen relative w-full overflow-hidden">
+    <div className="w-full min-h-screen bg-[#070913] text-[#F3F4F6] relative overflow-hidden font-sans pb-20">
       <Toaster position="bottom-right" toastOptions={{
         style: {
-          background: "rgba(15, 23, 42, 0.9)",
-          color: "#fff",
-          border: "1px solid rgba(139, 92, 246, 0.2)",
-          backdropFilter: "blur(12px)",
-          borderRadius: "1rem"
+          background: "rgba(10, 15, 30, 0.95)",
+          color: "#F3F4F6",
+          border: "1px solid rgba(139, 92, 246, 0.3)",
+          backdropFilter: "blur(16px)",
+          borderRadius: "1rem",
+          fontWeight: 600,
         }
       }} />
-      
-      {/* Background Gradient & Animated Mesh Lights */}
-      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-700/10 blur-[160px] rounded-full pointer-events-none animate-pulse duration-10000"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-cyan-500/10 blur-[180px] rounded-full pointer-events-none"></div>
 
-      {/* Main Connection Screen Wrapper */}
-      {!isConnected ? (
-        <div className="flex flex-col items-center justify-center py-28 text-center max-w-xl mx-auto px-4 relative z-10">
-          <div className="p-5 bg-gradient-to-tr from-purple-500/10 to-indigo-500/10 rounded-[2rem] border border-purple-500/20 mb-8 shadow-2xl relative group">
-            <div className="absolute inset-0 bg-purple-500/20 rounded-[2rem] blur-xl opacity-50 group-hover:opacity-100 transition-opacity"></div>
-            <WalletIcon className="w-16 h-16 text-purple-400 relative z-10 animate-bounce duration-3000" />
-          </div>
-          <h2 className="text-4xl font-extrabold text-white tracking-tight mb-3">
-            Your Starknet Wealth, Unified.
-          </h2>
-          <p className="text-slate-400 text-base mb-10 max-w-md">
-            Connect your primary Starknet wallet to securely aggregate, track, and showcase multi-wallet balances & NFTs on Starknet Mainnet.
-          </p>
-          <div className="w-full px-6 py-5 bg-slate-950/40 border border-slate-800/80 backdrop-blur-md rounded-2xl text-xs text-left text-slate-400 flex items-start gap-3 shadow-inner">
-            <span className="text-xl">✨</span>
-            <div>
-              <strong className="text-slate-200 block mb-1">Decentralized Profile Storage</strong>
-              Tracked addresses, custom tokens, and NFT configurations are automatically bound directly to your wallet identity via secure localized profiles.
+      {/* Modern Sci-Fi Ambient Glow Fields */}
+      <div className="absolute top-[-25%] left-[-20%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-tr from-purple-600/10 to-transparent blur-[160px] pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-br from-cyan-500/10 to-transparent blur-[180px] pointer-events-none"></div>
+      <div className="absolute top-[20%] right-[15%] w-[35vw] h-[35vw] rounded-full bg-violet-600/5 blur-[130px] pointer-events-none"></div>
+
+      <div className="max-w-7xl mx-auto px-4 md:px-8 pt-12 relative z-10">
+        
+        {/* Dynamic Futuristic Glass Header */}
+        <div className="bg-[#0C0F1D]/80 border border-[#1E293B]/80 backdrop-blur-2xl rounded-3xl p-6 md:p-8 mb-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="h-2 w-2 rounded-full bg-cyan-400 animate-ping"></span>
+              <span className="text-[10px] tracking-widest font-black text-cyan-400 uppercase">Live Mainnet Blockchain RPC</span>
             </div>
+            <h1 className="text-3xl md:text-5xl font-black tracking-tight text-white leading-none">
+              Starknet Portfolio Tracker
+            </h1>
+            <p className="text-slate-400 text-xs mt-2 max-w-xl">
+              Futuristic multi-address asset aggregation dashboard. Track real-time tokens, values, and NFTs from the Starknet network.
+            </p>
           </div>
-        </div>
-      ) : (
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 relative z-10">
-          {/* Header Dashboard Control Panel */}
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12 gap-8">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
-                <span className="text-[10px] uppercase tracking-widest font-black text-emerald-400">Live Mainnet RPC Enabled</span>
-              </div>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-                Starknet Multi-Address Tracker
-              </h1>
-              <div className="flex items-center gap-2 mt-3 bg-slate-900/60 border border-slate-800/80 rounded-full px-3 py-1.5 w-fit shadow-lg">
-                <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">Anchor Address:</span>
-                <span className="text-xs font-mono text-slate-300">
-                  {connectedAddress ? `${connectedAddress.slice(0, 10)}...${connectedAddress.slice(-8)}` : ""}
-                </span>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto">
+            {/* Connected Anchor Address capsule */}
+            {connectedAddress && (
+              <div className="flex items-center justify-between gap-3 bg-[#111827]/90 border border-[#1F2937] rounded-2xl px-4 py-3 shadow-inner">
+                <div className="flex flex-col">
+                  <span className="text-[9px] uppercase tracking-wider font-extrabold text-purple-400">Anchor Wallet</span>
+                  <span className="text-xs font-mono font-bold text-slate-200">
+                    {`${connectedAddress.slice(0, 8)}...${connectedAddress.slice(-6)}`}
+                  </span>
+                </div>
                 <button 
-                  onClick={() => connectedAddress && handleCopy(connectedAddress)}
-                  className="p-1 rounded-full text-slate-400 hover:text-white transition-colors"
+                  onClick={() => handleCopy(connectedAddress)}
+                  className="p-1.5 bg-[#1F2937] hover:bg-slate-700 rounded-xl text-slate-300 transition-all active:scale-90"
+                  title="Copy Address"
                 >
                   {copiedText === connectedAddress ? <CheckIcon className="w-3.5 h-3.5 text-emerald-400" /> : <DocumentDuplicateIcon className="w-3.5 h-3.5" />}
                 </button>
               </div>
-            </div>
+            )}
 
-            {/* Quick Actions Panel */}
-            <div className="flex items-center gap-3 w-full lg:w-auto">
-              <button
-                onClick={fetchAllBalances}
-                disabled={isLoading}
-                className="flex items-center gap-2.5 px-6 py-3.5 bg-slate-900/80 hover:bg-slate-800 border border-slate-800/80 hover:border-slate-700 rounded-2xl text-xs font-bold transition-all w-full lg:w-auto justify-center shadow-lg active:scale-95"
-              >
-                <ArrowPathIcon className={`w-4 h-4 text-purple-400 ${isLoading ? "animate-spin" : ""}`} />
-                {isLoading ? "Synchronizing Chain Data..." : "Force Real-time Sync"}
-              </button>
-            </div>
+            <button
+              onClick={fetchAllBalances}
+              disabled={isLoading}
+              className="flex items-center justify-center gap-2.5 px-6 py-4 bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white rounded-2xl text-xs font-extrabold shadow-[0_4px_20px_rgba(99,102,241,0.4)] active:scale-95 transition-all disabled:opacity-50"
+            >
+              <ArrowPathIcon className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+              {isLoading ? "Synchronizing..." : "Refresh Dashboard"}
+            </button>
           </div>
+        </div>
 
-          {/* Core Layout Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* Dashboard Grid Workspace */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          
+          {/* LEFT PANELS: Aggregate and Address Linked lists */}
+          <div className="lg:col-span-1 flex flex-col gap-8">
             
-            {/* LEFT COLUMN: Overview & Addresses */}
-            <div className="lg:col-span-1 flex flex-col gap-8">
+            {/* Aggregated Total Net Worth Card */}
+            <div className="bg-gradient-to-b from-[#131A30] to-[#0A0E1A] border border-[#1E293B] shadow-[0_20px_40px_rgba(0,0,0,0.6)] rounded-3xl p-6 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-36 h-36 bg-cyan-500/10 rounded-full blur-[40px] pointer-events-none group-hover:scale-125 transition-transform duration-700"></div>
               
-              {/* Premium Aggregate Net Worth Card */}
-              <div className="bg-slate-950/40 backdrop-blur-2xl border border-slate-800/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] rounded-[2rem] p-6 hover:border-purple-500/20 transition-all duration-300 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-purple-500/10 to-indigo-500/0 blur-3xl group-hover:scale-125 transition-transform duration-700"></div>
-                <div className="flex justify-between items-center mb-6">
-                  <span className="text-xs uppercase font-extrabold tracking-wider text-purple-400 flex items-center gap-2">
-                    <WalletIcon className="w-4 h-4" />
-                    Total Net Worth
-                  </span>
-                  <span className="text-[10px] bg-purple-500/15 border border-purple-500/20 text-purple-300 font-bold px-2.5 py-1 rounded-full">
-                    {allAddresses.length} {allAddresses.length === 1 ? "Wallet" : "Wallets"} Tracked
-                  </span>
-                </div>
+              <div className="flex justify-between items-center mb-6">
+                <span className="text-xs uppercase font-extrabold tracking-widest text-purple-400 flex items-center gap-2">
+                  <WalletIcon className="w-4 h-4 text-purple-400" />
+                  Aggregate Portfolio
+                </span>
+                <span className="text-[10px] bg-purple-500/20 text-purple-300 font-extrabold px-3 py-1 rounded-full border border-purple-500/30 uppercase tracking-wide">
+                  {allAddresses.length} Linked
+                </span>
+              </div>
 
-                <div className="mb-6">
-                  <div className="text-4xl md:text-5xl font-black text-white tracking-tight flex items-baseline gap-1">
-                    <span className="text-2xl font-bold text-slate-400">$</span>
-                    {totalUSDValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </div>
-                  <span className="text-[11px] text-slate-400 mt-2 block font-medium">Aggregated real-time token balances</span>
+              <div className="mb-6">
+                <div className="text-xs text-slate-400 uppercase tracking-widest font-black mb-1">TOTAL NET WORTH</div>
+                <div className="text-4xl md:text-5xl font-black text-white tracking-tight flex items-baseline gap-1">
+                  <span className="text-2xl font-bold text-cyan-400">$</span>
+                  {totalUSDValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
+              </div>
 
-                {/* Horizontal Asset Allocation Visualization */}
-                <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden flex shadow-inner">
+              {/* Progress Visualization per Asset */}
+              <div className="space-y-3 pt-2">
+                <div className="h-2 w-full bg-[#1F2937] rounded-full overflow-hidden flex shadow-inner">
                   {totalUSDValue > 0 ? allTokens.map((token, index) => {
                     const amt = tokenTotals[token.symbol] || 0;
                     const val = amt * (prices[token.symbol] || 0);
@@ -482,337 +474,363 @@ const Home = () => {
                         key={token.symbol} 
                         className={color} 
                         style={{ width: `${pct}%` }}
-                        title={`${token.symbol}: ${pct.toFixed(1)}%`}
                       ></div>
                     );
                   }) : <div className="bg-slate-800 w-full"></div>}
                 </div>
+
+                <div className="flex flex-wrap gap-x-4 gap-y-2 pt-2">
+                  {allTokens.map((token, index) => {
+                    const amt = tokenTotals[token.symbol] || 0;
+                    const val = amt * (prices[token.symbol] || 0);
+                    const pct = totalUSDValue > 0 ? (val / totalUSDValue) * 100 : 0;
+                    if (pct === 0) return null;
+                    
+                    const colors = ["bg-cyan-400", "bg-purple-500", "bg-emerald-400", "bg-indigo-400", "bg-amber-400"];
+                    const dotColor = colors[index % colors.length];
+
+                    return (
+                      <div key={token.symbol} className="flex items-center gap-1.5 text-[10px] font-bold text-slate-300">
+                        <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`}></span>
+                        <span>{token.symbol} ({pct.toFixed(0)}%)</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
+            </div>
 
-              {/* Address Registry Box */}
-              <div className="bg-slate-950/40 backdrop-blur-2xl border border-slate-800/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] rounded-[2rem] p-6 hover:border-purple-500/20 transition-all duration-300">
-                <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2.5">
-                  <CircleStackIcon className="w-5 h-5 text-cyan-400" />
-                  Address Registry
-                </h3>
+            {/* Address Registry Box */}
+            <div className="bg-[#0C0F1D]/90 border border-[#1E293B] shadow-[0_20px_40px_rgba(0,0,0,0.6)] rounded-3xl p-6">
+              <h3 className="text-sm uppercase tracking-widest font-black text-white mb-6 flex items-center gap-2">
+                <CircleStackIcon className="w-5 h-5 text-cyan-400" />
+                Linked Wallets
+              </h3>
 
-                <div className="space-y-3.5 mb-6 max-h-[300px] overflow-y-auto pr-1">
-                  {/* Connected Anchor Wallet */}
-                  <div className="p-4 rounded-2xl bg-purple-500/5 border border-purple-500/20 flex justify-between items-center hover:border-purple-500/30 transition-all">
+              <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1 mb-6">
+                {/* Connected Wallet Row */}
+                <div className="p-4 bg-purple-950/15 border border-purple-500/25 rounded-2xl flex justify-between items-center group">
+                  <div>
+                    <span className="text-[9px] uppercase tracking-wider font-extrabold text-purple-400 block mb-0.5">Primary Connection</span>
+                    <span className="text-xs font-mono font-bold text-slate-200">
+                      {connectedAddress ? `${connectedAddress.slice(0, 14)}...${connectedAddress.slice(-8)}` : ""}
+                    </span>
+                  </div>
+                  <span className="text-[8px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded font-black tracking-wider uppercase">Active</span>
+                </div>
+
+                {/* Secondary Wallets */}
+                {secondaryAddresses.map((addr) => (
+                  <div key={addr} className="p-4 bg-[#111827]/70 border border-[#1F2937] hover:border-slate-700 rounded-2xl flex justify-between items-center group transition-colors">
                     <div>
-                      <span className="text-xs font-black text-purple-300 block mb-1">Primary Wallet</span>
-                      <span className="text-[10px] text-slate-400 font-mono">{connectedAddress ? `${connectedAddress.slice(0, 16)}...${connectedAddress.slice(-10)}` : ""}</span>
+                      <span className="text-[9px] uppercase tracking-wider font-extrabold text-slate-400 block mb-0.5">Secondary Tracked</span>
+                      <span className="text-xs font-mono font-bold text-slate-300">
+                        {`${addr.slice(0, 14)}...${addr.slice(-8)}`}
+                      </span>
                     </div>
-                    <span className="text-[9px] bg-purple-500/20 text-purple-300 font-black px-2.5 py-1 rounded-full uppercase tracking-wider">Anchor</span>
-                  </div>
-
-                  {/* Secondary Wallets */}
-                  {secondaryAddresses.map((addr) => (
-                    <div key={addr} className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/60 flex justify-between items-center group hover:border-slate-700 transition-all">
-                      <div>
-                        <span className="text-xs font-bold text-slate-300 block mb-1">Linked Wallet</span>
-                        <span className="text-[10px] text-slate-400 font-mono">{`${addr.slice(0, 16)}...${addr.slice(-10)}`}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <button 
-                          onClick={() => handleCopy(addr)}
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 opacity-0 group-hover:opacity-100 transition-all"
-                          title="Copy Address"
-                        >
-                          <DocumentDuplicateIcon className="w-4 h-4" />
-                        </button>
-                        <button 
-                          onClick={() => handleRemoveSecondaryAddress(addr)}
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
-                          title="Remove Wallet"
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                        </button>
-                      </div>
+                    <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={() => handleCopy(addr)}
+                        className="p-1 text-slate-400 hover:text-white"
+                        title="Copy"
+                      >
+                        <DocumentDuplicateIcon className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleRemoveSecondaryAddress(addr)}
+                        className="p-1 text-slate-400 hover:text-red-400"
+                        title="Delete"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
                     </div>
-                  ))}
-                </div>
-
-                {/* Add Secondary Address Form */}
-                <form onSubmit={handleAddSecondaryAddress} className="pt-5 border-t border-slate-900">
-                  <label className="text-xs text-slate-400 font-bold block mb-2 uppercase tracking-wide">Link Additional Address</label>
-                  <div className="flex gap-2.5">
-                    <input
-                      type="text"
-                      placeholder="0x04718..."
-                      value={newSecAddress}
-                      onChange={(e) => setNewSecAddress(e.target.value)}
-                      className="bg-slate-900/80 rounded-2xl px-4 py-3 text-xs border border-slate-800 focus:border-purple-500/50 text-white placeholder-slate-600 focus:outline-none flex-grow shadow-inner transition-colors"
-                    />
-                    <button
-                      type="submit"
-                      className="px-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl text-white hover:opacity-90 active:scale-95 transition-all flex justify-center items-center shadow-lg"
-                      title="Link Wallet"
-                    >
-                      <PlusIcon className="w-4.5 h-4.5" />
-                    </button>
                   </div>
-                </form>
+                ))}
               </div>
 
+              {/* Add Secondary form */}
+              <form onSubmit={handleAddSecondaryAddress} className="pt-5 border-t border-[#1E293B]">
+                <label className="text-[9px] uppercase tracking-wider font-extrabold text-slate-400 block mb-2">Link Another Starknet Wallet</label>
+                <div className="flex gap-2.5">
+                  <input
+                    type="text"
+                    placeholder="0x04718..."
+                    value={newSecAddress}
+                    onChange={(e) => setNewSecAddress(e.target.value)}
+                    className="bg-[#111827] border border-[#1F2937] focus:border-purple-500/50 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none flex-grow"
+                  />
+                  <button
+                    type="submit"
+                    className="px-3.5 bg-[#1F2937] hover:bg-[#374151] rounded-xl text-white active:scale-95 transition-all flex justify-center items-center shadow-lg border border-slate-700/50"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              </form>
             </div>
 
-            {/* RIGHT COLUMN: Interactive Tabs (Tokens / NFTs) */}
-            <div className="lg:col-span-2 flex flex-col gap-8">
-              
-              {/* Tab Selector Bar */}
-              <div className="flex items-center gap-1.5 bg-slate-950/40 p-1.5 rounded-2xl border border-slate-800/60 shadow-lg w-fit">
-                <button
-                  onClick={() => setActiveTab("tokens")}
-                  className={`flex items-center gap-2 px-6 py-3.5 rounded-xl text-xs font-extrabold tracking-wider transition-all justify-center ${
-                    activeTab === "tokens"
-                      ? "bg-slate-900 text-white border border-slate-800 shadow-md"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  <CurrencyDollarIcon className="w-4 h-4 text-purple-400" />
-                  Tokens Breakdown
-                </button>
-                <button
-                  onClick={() => setActiveTab("nfts")}
-                  className={`flex items-center gap-2 px-6 py-3.5 rounded-xl text-xs font-extrabold tracking-wider transition-all justify-center ${
-                    activeTab === "nfts"
-                      ? "bg-slate-900 text-white border border-slate-800 shadow-md"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  <PhotoIcon className="w-4 h-4 text-cyan-400" />
-                  NFTs Showcase
-                </button>
+          </div>
+
+          {/* RIGHT PANELS: Dynamic Token Breakdown or NFTs Showcase */}
+          <div className="lg:col-span-2 flex flex-col gap-8">
+            
+            {/* Glossy Tab Selector Bar */}
+            <div className="flex items-center gap-2 bg-[#0C0F1D]/80 border border-[#1E293B] rounded-2xl p-1.5 w-fit shadow-2xl">
+              <button
+                onClick={() => setActiveTab("tokens")}
+                className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-black tracking-wider transition-all ${
+                  activeTab === "tokens"
+                    ? "bg-[#1E293B] text-white border border-[#374151]"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <CurrencyDollarIcon className="w-4 h-4 text-purple-400" />
+                Tracked Tokens
+              </button>
+              <button
+                onClick={() => setActiveTab("nfts")}
+                className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-black tracking-wider transition-all ${
+                  activeTab === "nfts"
+                    ? "bg-[#1E293B] text-white border border-[#374151]"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <PhotoIcon className="w-4 h-4 text-cyan-400" />
+                NFT Gallery
+              </button>
+            </div>
+
+            {/* TAB: TOKENS */}
+            {activeTab === "tokens" && (
+              <div className="space-y-8 animate-fadeIn">
+                
+                {/* Premium Table Card */}
+                <div className="bg-[#0C0F1D]/90 border border-[#1E293B] shadow-[0_20px_40px_rgba(0,0,0,0.6)] rounded-3xl p-6">
+                  <h3 className="text-sm uppercase tracking-widest font-black text-white mb-6">Asset Allocation Breakdown</h3>
+
+                  <div className="space-y-3">
+                    {allTokens.map((token, index) => {
+                      const amt = tokenTotals[token.symbol] || 0;
+                      const tokenUSD = amt * (prices[token.symbol] || 0);
+                      const colors = ["bg-cyan-400", "bg-purple-500", "bg-emerald-400", "bg-indigo-400", "bg-amber-400"];
+                      const indicatorColor = colors[index % colors.length];
+
+                      return (
+                        <div 
+                          key={token.symbol}
+                          className="flex items-center justify-between p-4 bg-[#111827]/40 border border-[#1F2937]/50 hover:border-slate-700/60 rounded-2xl transition-all group"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className={`w-3 h-3 rounded-full ${indicatorColor} shadow-[0_0_8px_currentcolor]`}></div>
+                            <div>
+                              <span className="font-black text-sm text-white block leading-tight">{token.symbol}</span>
+                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{token.label}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-5">
+                            <div className="text-right">
+                              <span className="font-extrabold text-sm text-white block tracking-tight">
+                                {amt.toLocaleString(undefined, { maximumFractionDigits: 5 })}
+                              </span>
+                              <span className="text-xs text-cyan-400 font-bold block mt-0.5">
+                                ${tokenUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                            </div>
+
+                            {token.isCustom ? (
+                              <button
+                                onClick={() => handleRemoveCustomToken(token.symbol)}
+                                className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                title="Remove Custom Token"
+                              >
+                                <TrashIcon className="w-4 h-4" />
+                              </button>
+                            ) : (
+                              <a 
+                                href={`https://starkscan.co/token/${token.address}`} 
+                                target="_blank" 
+                                rel="noreferrer" 
+                                className="p-2 text-slate-500 hover:text-slate-200 hover:bg-[#1E293B] rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                title="View Contract"
+                              >
+                                <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Add Custom Token Card */}
+                <div className="bg-[#0C0F1D]/90 border border-[#1E293B] shadow-[0_20px_40px_rgba(0,0,0,0.6)] rounded-3xl p-6">
+                  <h3 className="text-sm uppercase tracking-widest font-black text-white mb-6 flex items-center gap-2">
+                    <PlusIcon className="w-4.5 h-4.5 text-purple-400" />
+                    Register Custom Starknet Token
+                  </h3>
+
+                  <form onSubmit={handleAddCustomToken} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div className="md:col-span-2">
+                      <label className="text-[9px] uppercase tracking-wider font-extrabold text-slate-400 block mb-2">Contract Address</label>
+                      <input
+                        type="text"
+                        placeholder="0x049d365..."
+                        value={newTokenAddress}
+                        onChange={(e) => setNewTokenAddress(e.target.value)}
+                        className="w-full bg-[#111827] border border-[#1F2937] focus:border-purple-500/50 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] uppercase tracking-wider font-extrabold text-slate-400 block mb-2">Symbol</label>
+                      <input
+                        type="text"
+                        placeholder="LORDS"
+                        value={newTokenSymbol}
+                        onChange={(e) => setNewTokenSymbol(e.target.value)}
+                        className="w-full bg-[#111827] border border-[#1F2937] focus:border-purple-500/50 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="flex-grow">
+                        <label className="text-[9px] uppercase tracking-wider font-extrabold text-slate-400 block mb-2">Decimals</label>
+                        <input
+                          type="number"
+                          value={newTokenDecimals}
+                          onChange={(e) => setNewTokenDecimals(parseInt(e.target.value) || 18)}
+                          className="w-full bg-[#111827] border border-[#1F2937] focus:border-purple-500/50 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="p-3 bg-[#1F2937] hover:bg-[#374151] rounded-xl text-white active:scale-95 transition-all border border-slate-700/50"
+                      >
+                        <PlusIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
               </div>
+            )}
 
-              {/* TAB CONTENT: TOKENS */}
-              {activeTab === "tokens" && (
-                <div className="space-y-8 animate-fadeIn">
-                  {/* Tokens Balance list */}
-                  <div className="bg-slate-950/40 backdrop-blur-2xl border border-slate-800/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] rounded-[2rem] p-6 hover:border-purple-500/20 transition-all duration-300">
-                    <h3 className="text-base font-bold text-white mb-6">Tracked Assets Breakdown</h3>
-                    
-                    <div className="space-y-3.5">
-                      {allTokens.map((token, index) => {
-                        const amt = tokenTotals[token.symbol] || 0;
-                        const tokenUSD = amt * (prices[token.symbol] || 0);
-                        const colors = ["bg-cyan-400", "bg-purple-500", "bg-emerald-400", "bg-indigo-400", "bg-amber-400"];
-                        const indicatorColor = colors[index % colors.length];
+            {/* TAB: NFTS */}
+            {activeTab === "nfts" && (
+              <div className="space-y-8 animate-fadeIn">
+                
+                {/* NFT Gallery Card */}
+                <div className="bg-[#0C0F1D]/90 border border-[#1E293B] shadow-[0_20px_40px_rgba(0,0,0,0.6)] rounded-3xl p-6">
+                  <h3 className="text-sm uppercase tracking-widest font-black text-white mb-6">Digital Art Portfolios</h3>
 
-                        return (
-                          <div 
-                            key={token.symbol}
-                            className="p-4.5 rounded-2xl bg-slate-900/20 border border-slate-800/40 hover:border-slate-700/50 hover:bg-slate-900/30 transition-all flex justify-between items-center group"
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Preloaded NFTs */}
+                    {PRELOADED_NFTS.map((nft) => (
+                      <div key={nft.id} className="bg-[#111827]/40 border border-[#1F2937]/50 rounded-2xl overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
+                        <div className="h-44 w-full bg-[#070913] relative overflow-hidden">
+                          <img src={nft.imageUrl} alt={nft.name} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                          <span className="absolute top-3 left-3 text-[9px] uppercase tracking-wider font-extrabold px-2.5 py-1 bg-cyan-950/80 text-cyan-300 border border-cyan-800/40 rounded-full backdrop-blur-md">Collection</span>
+                        </div>
+                        <div className="p-4 flex-grow flex flex-col justify-between">
+                          <div>
+                            <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest block mb-0.5">{nft.collection}</span>
+                            <h4 className="text-sm font-extrabold text-white leading-tight">{nft.name}</h4>
+                          </div>
+                          <div className="flex justify-between items-center pt-3 mt-4 border-t border-[#1E293B] text-[10px] font-mono text-slate-400">
+                            <span>ID: #{nft.tokenId}</span>
+                            <a href={`https://starkscan.co/nft/${nft.contractAddress}/${nft.tokenId}`} target="_blank" rel="noreferrer" className="hover:text-white flex items-center gap-1">
+                              View <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Custom NFTs */}
+                    {customNFTs.map((nft) => (
+                      <div key={nft.id} className="bg-[#111827]/40 border border-[#1F2937]/50 rounded-2xl overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between relative">
+                        <div className="h-44 w-full bg-[#070913] relative overflow-hidden flex justify-center items-center">
+                          <img src={nft.imageUrl} alt={nft.name} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                          <span className="absolute top-3 left-3 text-[9px] uppercase tracking-wider font-extrabold px-2.5 py-1 bg-purple-950/80 text-purple-300 border border-purple-800/40 rounded-full backdrop-blur-md font-black">Custom</span>
+                          <button
+                            onClick={() => handleRemoveCustomNFT(nft.id)}
+                            className="absolute top-3 right-3 p-2 bg-red-950/80 text-red-400 border border-red-800/40 rounded-xl hover:bg-red-700 hover:text-white transition-colors"
                           >
-                            <div className="flex items-center gap-3.5">
-                              <div className={`w-2.5 h-2.5 rounded-full ${indicatorColor} shadow-lg`}></div>
-                              <div>
-                                <span className="font-black text-white text-sm block mb-0.5">{token.symbol}</span>
-                                <span className="text-[10px] text-slate-400 font-medium">{token.label}</span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-4">
-                              <div className="text-right">
-                                <div className="text-sm font-black text-white tracking-tight">{amt.toLocaleString(undefined, { maximumFractionDigits: 5 })}</div>
-                                <div className="text-xs text-slate-400 font-bold mt-0.5">${tokenUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                              </div>
-
-                              {token.isCustom ? (
-                                <button
-                                  onClick={() => handleRemoveCustomToken(token.symbol)}
-                                  className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
-                                  title="Delete custom token"
-                                >
-                                  <TrashIcon className="w-4 h-4" />
-                                </button>
-                              ) : (
-                                <a 
-                                  href={`https://starkscan.co/token/${token.address}`} 
-                                  target="_blank" 
-                                  rel="noreferrer" 
-                                  className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 opacity-0 group-hover:opacity-100 transition-all"
-                                  title="View on Explorer"
-                                >
-                                  <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                                </a>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Add Custom Token Form */}
-                  <div className="bg-slate-950/40 backdrop-blur-2xl border border-slate-800/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] rounded-[2rem] p-6 hover:border-purple-500/20 transition-all duration-300">
-                    <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
-                      <PlusIcon className="w-5 h-5 text-purple-400" />
-                      Add Custom Starknet Token
-                    </h3>
-
-                    <form onSubmit={handleAddCustomToken} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                      <div className="md:col-span-2">
-                        <label className="text-xs text-slate-400 font-bold block mb-2 uppercase tracking-wide">Contract Address</label>
-                        <input
-                          type="text"
-                          placeholder="0x049d365..."
-                          value={newTokenAddress}
-                          onChange={(e) => setNewTokenAddress(e.target.value)}
-                          className="w-full bg-slate-900/80 rounded-2xl px-4 py-3 text-xs border border-slate-800 focus:border-purple-500/50 text-white placeholder-slate-600 focus:outline-none transition-colors"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-slate-400 font-bold block mb-2 uppercase tracking-wide">Symbol</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. LORDS"
-                          value={newTokenSymbol}
-                          onChange={(e) => setNewTokenSymbol(e.target.value)}
-                          className="w-full bg-slate-900/80 rounded-2xl px-4 py-3 text-xs border border-slate-800 focus:border-purple-500/50 text-white placeholder-slate-600 focus:outline-none transition-colors"
-                        />
-                      </div>
-                      <div className="flex gap-2.5">
-                        <div className="flex-grow">
-                          <label className="text-xs text-slate-400 font-bold block mb-2 uppercase tracking-wide">Decimals</label>
-                          <input
-                            type="number"
-                            value={newTokenDecimals}
-                            onChange={(e) => setNewTokenDecimals(parseInt(e.target.value) || 18)}
-                            className="w-full bg-slate-900/80 rounded-2xl px-4 py-3 text-xs border border-slate-800 focus:border-purple-500/50 text-white focus:outline-none transition-colors"
-                          />
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
                         </div>
-                        <button
-                          type="submit"
-                          className="p-3 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl text-white hover:opacity-90 active:scale-95 transition-all flex justify-center items-center shadow-lg"
-                          title="Register Token"
-                        >
-                          <PlusIcon className="w-4.5 h-4.5" />
-                        </button>
+                        <div className="p-4 flex-grow flex flex-col justify-between">
+                          <div>
+                            <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest block mb-0.5">{nft.collection}</span>
+                            <h4 className="text-sm font-extrabold text-white leading-tight">{nft.name}</h4>
+                          </div>
+                          <div className="flex justify-between items-center pt-3 mt-4 border-t border-[#1E293B] text-[10px] font-mono text-slate-400">
+                            <span>ID: #{nft.tokenId}</span>
+                            <a href={`https://starkscan.co/nft/${nft.contractAddress}/${nft.tokenId}`} target="_blank" rel="noreferrer" className="hover:text-white flex items-center gap-1">
+                              View <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+                        </div>
                       </div>
-                    </form>
+                    ))}
                   </div>
                 </div>
-              )}
 
-              {/* TAB CONTENT: NFTS */}
-              {activeTab === "nfts" && (
-                <div className="space-y-8 animate-fadeIn">
-                  {/* NFT Gallery Grid */}
-                  <div className="bg-slate-950/40 backdrop-blur-2xl border border-slate-800/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] rounded-[2rem] p-6 hover:border-purple-500/20 transition-all duration-300">
-                    <h3 className="text-base font-bold text-white mb-6">Portfolio NFT Gallery</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Offered Preloaded NFTs */}
-                      {PRELOADED_NFTS.map((nft) => (
-                        <div key={nft.id} className="rounded-3xl border border-slate-800/60 overflow-hidden bg-slate-900/10 flex flex-col group relative hover:border-slate-700 transition-all duration-300 shadow-md">
-                          <div className="relative h-48 w-full bg-slate-950 overflow-hidden">
-                            <img src={nft.imageUrl} alt={nft.name} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
-                            <span className="absolute top-3 left-3 text-[9px] tracking-wider uppercase font-black px-2.5 py-1 bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 rounded-full backdrop-blur-md">Featured Collection</span>
-                          </div>
-                          <div className="p-5 flex-grow flex flex-col justify-between">
-                            <div>
-                              <span className="text-[10px] text-purple-400 font-bold uppercase tracking-wide">{nft.collection}</span>
-                              <h4 className="text-sm font-extrabold text-white mt-1.5 mb-3">{nft.name}</h4>
-                            </div>
-                            <div className="flex justify-between items-center pt-3.5 border-t border-slate-900 text-[10px] font-mono text-slate-400">
-                              <span>Token ID: #{nft.tokenId}</span>
-                              <a href={`https://starkscan.co/nft/${nft.contractAddress}/${nft.tokenId}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-white transition-colors">
-                                Explorer <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5" />
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                {/* Add Custom NFT Card */}
+                <div className="bg-[#0C0F1D]/90 border border-[#1E293B] shadow-[0_20px_40px_rgba(0,0,0,0.6)] rounded-3xl p-6">
+                  <h3 className="text-sm uppercase tracking-widest font-black text-white mb-6 flex items-center gap-2">
+                    <PlusIcon className="w-4.5 h-4.5 text-purple-400" />
+                    Register Custom Starknet NFT
+                  </h3>
 
-                      {/* Custom NFTs */}
-                      {customNFTs.map((nft) => (
-                        <div key={nft.id} className="rounded-3xl border border-slate-800/60 overflow-hidden bg-slate-900/10 flex flex-col group relative hover:border-slate-700 transition-all duration-300 shadow-md">
-                          <div className="relative h-48 w-full bg-slate-950 flex justify-center items-center overflow-hidden">
-                            <img src={nft.imageUrl} alt={nft.name} className="object-cover w-full h-full opacity-60 group-hover:scale-105 transition-transform duration-500" />
-                            <span className="absolute top-3 left-3 text-[9px] tracking-wider uppercase font-black px-2.5 py-1 bg-purple-500/20 border border-purple-500/30 text-purple-300 rounded-full backdrop-blur-md">Custom Tracked</span>
-                            <button
-                              onClick={() => handleRemoveCustomNFT(nft.id)}
-                              className="absolute top-3 right-3 p-2 rounded-xl bg-red-500/25 border border-red-500/30 hover:bg-red-600 hover:text-white text-red-400 transition-all opacity-0 group-hover:opacity-100 backdrop-blur-md"
-                              title="Remove Custom NFT"
-                            >
-                              <TrashIcon className="w-4 h-4" />
-                            </button>
-                          </div>
-                          <div className="p-5 flex-grow flex flex-col justify-between">
-                            <div>
-                              <span className="text-[10px] text-purple-400 font-bold uppercase tracking-wide">{nft.collection}</span>
-                              <h4 className="text-sm font-extrabold text-white mt-1.5 mb-3">{nft.name}</h4>
-                            </div>
-                            <div className="flex justify-between items-center pt-3.5 border-t border-slate-900 text-[10px] font-mono text-slate-400">
-                              <span>Token ID: #{nft.tokenId}</span>
-                              <a href={`https://starkscan.co/nft/${nft.contractAddress}/${nft.tokenId}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-white transition-colors">
-                                Explorer <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5" />
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                  <form onSubmit={handleAddCustomNFT} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div>
+                      <label className="text-[9px] uppercase tracking-wider font-extrabold text-slate-400 block mb-2">Contract Address</label>
+                      <input
+                        type="text"
+                        placeholder="0x05dbcf..."
+                        value={newNFTAddress}
+                        onChange={(e) => setNewNFTAddress(e.target.value)}
+                        className="w-full bg-[#111827] border border-[#1F2937] focus:border-purple-500/50 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                      />
                     </div>
-                  </div>
-
-                  {/* Add Custom NFT Form */}
-                  <div className="bg-slate-950/40 backdrop-blur-2xl border border-slate-800/60 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] rounded-[2rem] p-6 hover:border-purple-500/20 transition-all duration-300">
-                    <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
-                      <PlusIcon className="w-5 h-5 text-purple-400" />
-                      Add Custom Starknet NFT
-                    </h3>
-
-                    <form onSubmit={handleAddCustomNFT} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                      <div>
-                        <label className="text-xs text-slate-400 font-bold block mb-2 uppercase tracking-wide">Contract Address</label>
+                    <div>
+                      <label className="text-[9px] uppercase tracking-wider font-extrabold text-slate-400 block mb-2">Token ID</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 452"
+                        value={newNFTTokenId}
+                        onChange={(e) => setNewNFTTokenId(e.target.value)}
+                        className="w-full bg-[#111827] border border-[#1F2937] focus:border-purple-500/50 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="flex-grow">
+                        <label className="text-[9px] uppercase tracking-wider font-extrabold text-slate-400 block mb-2">Custom NFT Name</label>
                         <input
                           type="text"
-                          placeholder="0x05dbcf..."
-                          value={newNFTAddress}
-                          onChange={(e) => setNewNFTAddress(e.target.value)}
-                          className="w-full bg-slate-900/80 rounded-2xl px-4 py-3 text-xs border border-slate-800 focus:border-purple-500/50 text-white placeholder-slate-600 focus:outline-none transition-colors"
+                          placeholder="Quest Shield"
+                          value={newNFTName}
+                          onChange={(e) => setNewNFTName(e.target.value)}
+                          className="w-full bg-[#111827] border border-[#1F2937] focus:border-purple-500/50 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
                         />
                       </div>
-                      <div>
-                        <label className="text-xs text-slate-400 font-bold block mb-2 uppercase tracking-wide">Token ID</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. 452"
-                          value={newNFTTokenId}
-                          onChange={(e) => setNewNFTTokenId(e.target.value)}
-                          className="w-full bg-slate-900/80 rounded-2xl px-4 py-3 text-xs border border-slate-800 focus:border-purple-500/50 text-white placeholder-slate-600 focus:outline-none transition-colors"
-                        />
-                      </div>
-                      <div className="flex gap-2.5">
-                        <div className="flex-grow">
-                          <label className="text-xs text-slate-400 font-bold block mb-2 uppercase tracking-wide">Custom NFT Name</label>
-                          <input
-                            type="text"
-                            placeholder="Quest Shield"
-                            value={newNFTName}
-                            onChange={(e) => setNewNFTName(e.target.value)}
-                            className="w-full bg-slate-900/80 rounded-2xl px-4 py-3 text-xs border border-slate-800 focus:border-purple-500/50 text-white placeholder-slate-600 focus:outline-none transition-colors"
-                          />
-                        </div>
-                        <button
-                          type="submit"
-                          className="p-3 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl text-white hover:opacity-90 active:scale-95 transition-all flex justify-center items-center shadow-lg"
-                          title="Track NFT"
-                        >
-                          <PlusIcon className="w-4.5 h-4.5" />
-                        </button>
-                      </div>
-                    </form>
-                  </div>
+                      <button
+                        type="submit"
+                        className="p-3 bg-[#1F2937] hover:bg-[#374151] rounded-xl text-white active:scale-95 transition-all border border-slate-700/50"
+                      >
+                        <PlusIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </form>
                 </div>
-              )}
 
-            </div>
+              </div>
+            )}
+
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
