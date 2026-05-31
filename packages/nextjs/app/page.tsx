@@ -430,23 +430,17 @@ const Home = () => {
 
   const fetchTokenPrice = async (symbol: string, address: string, decimals: number) => {
     try {
-      const usdcNorm = "0x" + USDC_ADDRESS.replace(/^0x0*/, "").padStart(64, "0").toLowerCase();
-      const sellAmt = BigInt(Math.floor(1 * 10 ** decimals)).toString(16);
       const tokenNorm = "0x" + address.replace(/^0x0*/, "").padStart(64, "0").toLowerCase();
-      const qRes = await fetch(
-        `${AVNU_API}/swap/v2/quotes?sellTokenAddress=${tokenNorm}&buyTokenAddress=${usdcNorm}&sellAmount=0x${sellAmt}&size=1`
-      );
-      if (!qRes.ok) return;
-      const qData = await qRes.json();
-      const quote = Array.isArray(qData) ? qData[0] : qData?.content?.[0];
-      if (quote) {
-        let price = 0;
-        if (quote.sellTokenPriceInUsd !== undefined && quote.sellTokenPriceInUsd !== null) {
-          price = Number(quote.sellTokenPriceInUsd);
-        } else if (quote.buyAmount) {
-          const usdcOut = Number(BigInt(quote.buyAmount)) / 1e6;
-          price = usdcOut;
-        }
+      const res = await fetch("https://starknet.impulse.avnu.fi/v3/tokens/prices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tokens: [tokenNorm] }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const priceObj = data?.[0];
+      if (priceObj) {
+        const price = priceObj.starknetMarket?.usd ?? priceObj.globalMarket?.usd ?? 0;
         if (price > 0) {
           setPrices(prev => ({ ...prev, [symbol]: price }));
         }
@@ -473,47 +467,64 @@ const Home = () => {
         }));
         setAvnuTokens(mapped);
 
-        // 2. Derive USD prices: quote 1 of each token → USDC (6 decimals = 1.000000)
-        const usdcNorm = "0x" + USDC_ADDRESS.replace(/^0x0*/, "").padStart(64, "0").toLowerCase();
-        const priceMap: Record<string, number> = { USDC: 1.00, USDT: 1.00 };
+        // 2. Derive USD prices in a single batch call to AVNU V3 prices endpoint!
+        const priceMap: Record<string, number> = { USDC: 1.00, USDT: 1.00, DAI: 1.00, DAIv0: 1.00 };
 
-        const seenAddresses = new Set<string>();
-        const uniqueTokensToPrice: any[] = [];
-        
-        for (const t of [...rawTokens, ...DEFAULT_CUSTOM_TOKENS]) {
-          const norm = "0x" + t.address.replace(/^0x0*/, "").padStart(64, "0").toLowerCase();
-          if (!seenAddresses.has(norm)) {
-            seenAddresses.add(norm);
-            uniqueTokensToPrice.push(t);
+        // Read custom tokens from localStorage directly to ensure we have them at mount time
+        let loadedCustom = DEFAULT_CUSTOM_TOKENS;
+        if (connectedAddress) {
+          const key = `starknet_portfolio_${connectedAddress.toLowerCase()}`;
+          const saved = localStorage.getItem(key);
+          if (saved) {
+            try {
+              const parsed = JSON.parse(saved);
+              if (parsed.customTokens) loadedCustom = parsed.customTokens;
+            } catch {}
           }
         }
 
-        // Sequential fetch with delay to bypass AVNU rate limits (429/400)
-        for (const t of uniqueTokensToPrice) {
-          if (t.symbol === "USDC" || t.symbol === "USDT") continue;
+        const seenAddresses = new Set<string>();
+        const tokenAddressesToQuery: string[] = [];
+        
+        for (const t of [...mapped, ...loadedCustom]) {
+          const norm = "0x" + t.address.replace(/^0x0*/, "").padStart(64, "0").toLowerCase();
+          if (!seenAddresses.has(norm)) {
+            seenAddresses.add(norm);
+            if (t.symbol !== "USDC" && t.symbol !== "USDT" && t.symbol !== "DAI" && t.symbol !== "DAIv0") {
+              tokenAddressesToQuery.push(norm);
+            }
+          }
+        }
+
+        // Query up to 45 tokens per request to be safe with URL/body sizes and rate limits
+        const chunkSize = 45;
+        for (let i = 0; i < tokenAddressesToQuery.length; i += chunkSize) {
+          const chunk = tokenAddressesToQuery.slice(i, i + chunkSize);
           try {
-            const sellAmt = BigInt(Math.floor(1 * 10 ** t.decimals)).toString(16);
-            const tokenNorm = "0x" + t.address.replace(/^0x0*/, "").padStart(64, "0").toLowerCase();
-            const qRes = await fetch(
-              `${AVNU_API}/swap/v2/quotes?sellTokenAddress=${tokenNorm}&buyTokenAddress=${usdcNorm}&sellAmount=0x${sellAmt}&size=1`
-            );
-            if (!qRes.ok) continue;
-            const qData = await qRes.json();
-            const quote = Array.isArray(qData) ? qData[0] : qData?.content?.[0];
-            if (quote) {
-              let price = 0;
-              if (quote.sellTokenPriceInUsd !== undefined && quote.sellTokenPriceInUsd !== null) {
-                price = Number(quote.sellTokenPriceInUsd);
-              } else if (quote.buyAmount) {
-                price = Number(BigInt(quote.buyAmount)) / 1e6;
-              }
-              if (price > 0) {
-                priceMap[t.symbol] = price;
+            const pRes = await fetch("https://starknet.impulse.avnu.fi/v3/tokens/prices", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ tokens: chunk }),
+            });
+            if (!pRes.ok) continue;
+            const pData = await pRes.json();
+            if (Array.isArray(pData)) {
+              for (const item of pData) {
+                const normAddr = "0x" + item.address.replace(/^0x0*/, "").padStart(64, "0").toLowerCase();
+                const tokenObj = [...mapped, ...loadedCustom].find(
+                  t => "0x" + t.address.replace(/^0x0*/, "").padStart(64, "0").toLowerCase() === normAddr
+                );
+                if (tokenObj) {
+                  const price = item.starknetMarket?.usd ?? item.globalMarket?.usd ?? 0;
+                  if (price > 0) {
+                    priceMap[tokenObj.symbol] = price;
+                  }
+                }
               }
             }
-            // Be extremely friendly to the rate-limiter
-            await new Promise(resolve => setTimeout(resolve, 150));
-          } catch { /* price stays undefined */ }
+          } catch (err) {
+            console.error("Failed to fetch price chunk", err);
+          }
         }
 
         setPrices(prev => ({ ...prev, ...priceMap }));
@@ -525,7 +536,7 @@ const Home = () => {
     };
 
     loadAvnuTokensAndPrices();
-  }, []);
+  }, [connectedAddress]);
 
   const fetchStarknetBalance = async (prov: any, token: string, user: string) => {
     const tryCall = async (entrypoint: string) => {
