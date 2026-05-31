@@ -430,9 +430,9 @@ const Home = () => {
 
   const fetchTokenPrice = async (symbol: string, address: string, decimals: number) => {
     try {
-      const usdcNorm = "0x" + USDC_ADDRESS.replace(/^0x0*/, "").padStart(64, "0");
-      const sellAmt = BigInt(Math.floor(0.01 * 10 ** decimals)).toString(16);
-      const tokenNorm = "0x" + address.replace(/^0x0*/, "").padStart(64, "0");
+      const usdcNorm = "0x" + USDC_ADDRESS.replace(/^0x0*/, "").padStart(64, "0").toLowerCase();
+      const sellAmt = BigInt(Math.floor(1 * 10 ** decimals)).toString(16);
+      const tokenNorm = "0x" + address.replace(/^0x0*/, "").padStart(64, "0").toLowerCase();
       const qRes = await fetch(
         `${AVNU_API}/swap/v2/quotes?sellTokenAddress=${tokenNorm}&buyTokenAddress=${usdcNorm}&sellAmount=0x${sellAmt}&size=1`
       );
@@ -445,7 +445,7 @@ const Home = () => {
           price = Number(quote.sellTokenPriceInUsd);
         } else if (quote.buyAmount) {
           const usdcOut = Number(BigInt(quote.buyAmount)) / 1e6;
-          price = usdcOut / 0.01;
+          price = usdcOut;
         }
         if (price > 0) {
           setPrices(prev => ({ ...prev, [symbol]: price }));
@@ -474,7 +474,7 @@ const Home = () => {
         setAvnuTokens(mapped);
 
         // 2. Derive USD prices: quote 1 of each token → USDC (6 decimals = 1.000000)
-        const usdcNorm = "0x" + USDC_ADDRESS.replace(/^0x0*/, "").padStart(64, "0");
+        const usdcNorm = "0x" + USDC_ADDRESS.replace(/^0x0*/, "").padStart(64, "0").toLowerCase();
         const priceMap: Record<string, number> = { USDC: 1.00, USDT: 1.00 };
 
         const seenAddresses = new Set<string>();
@@ -488,29 +488,33 @@ const Home = () => {
           }
         }
 
-        await Promise.all(
-          uniqueTokensToPrice.map(async (t) => {
-            if (t.symbol === "USDC" || t.symbol === "USDT") return;
-            try {
-              const sellAmt = BigInt(Math.floor(0.01 * 10 ** t.decimals)).toString(16);
-              const tokenNorm = "0x" + t.address.replace(/^0x0*/, "").padStart(64, "0");
-              const qRes = await fetch(
-                `${AVNU_API}/swap/v2/quotes?sellTokenAddress=${tokenNorm}&buyTokenAddress=${usdcNorm}&sellAmount=0x${sellAmt}&size=1`
-              );
-              if (!qRes.ok) return;
-              const qData = await qRes.json();
-              const quote = Array.isArray(qData) ? qData[0] : qData?.content?.[0];
-              if (quote) {
-                if (quote.sellTokenPriceInUsd !== undefined && quote.sellTokenPriceInUsd !== null) {
-                  priceMap[t.symbol] = Number(quote.sellTokenPriceInUsd);
-                } else if (quote.buyAmount) {
-                  const usdcOut = Number(BigInt(quote.buyAmount)) / 1e6;
-                  priceMap[t.symbol] = usdcOut / 0.01;
-                }
+        // Sequential fetch with delay to bypass AVNU rate limits (429/400)
+        for (const t of uniqueTokensToPrice) {
+          if (t.symbol === "USDC" || t.symbol === "USDT") continue;
+          try {
+            const sellAmt = BigInt(Math.floor(1 * 10 ** t.decimals)).toString(16);
+            const tokenNorm = "0x" + t.address.replace(/^0x0*/, "").padStart(64, "0").toLowerCase();
+            const qRes = await fetch(
+              `${AVNU_API}/swap/v2/quotes?sellTokenAddress=${tokenNorm}&buyTokenAddress=${usdcNorm}&sellAmount=0x${sellAmt}&size=1`
+            );
+            if (!qRes.ok) continue;
+            const qData = await qRes.json();
+            const quote = Array.isArray(qData) ? qData[0] : qData?.content?.[0];
+            if (quote) {
+              let price = 0;
+              if (quote.sellTokenPriceInUsd !== undefined && quote.sellTokenPriceInUsd !== null) {
+                price = Number(quote.sellTokenPriceInUsd);
+              } else if (quote.buyAmount) {
+                price = Number(BigInt(quote.buyAmount)) / 1e6;
               }
-            } catch { /* price stays undefined */ }
-          })
-        );
+              if (price > 0) {
+                priceMap[t.symbol] = price;
+              }
+            }
+            // Be extremely friendly to the rate-limiter
+            await new Promise(resolve => setTimeout(resolve, 150));
+          } catch { /* price stays undefined */ }
+        }
 
         setPrices(prev => ({ ...prev, ...priceMap }));
       } catch (e) {

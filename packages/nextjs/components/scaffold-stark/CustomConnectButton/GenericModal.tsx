@@ -1,4 +1,6 @@
 import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 const GenericModal = ({
   children,
@@ -10,15 +12,23 @@ const GenericModal = ({
   modalId: string;
 }) => {
   const { resolvedTheme } = useTheme();
-  const isDarkMode = resolvedTheme === "dark";
-  return (
-    <label htmlFor={modalId} className="modal backdrop-blur-sm cursor-pointer">
-      <label className={className} style={{ minHeight: "auto" }}>
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <label htmlFor={modalId} className="modal backdrop-blur-sm cursor-pointer z-[9999] fixed inset-0 flex items-center justify-center bg-black/60">
+      <label className={`${className} z-[10000]`} style={{ minHeight: "auto" }}>
         {/* dummy input to capture event onclick on modal box */}
-        <input className="h-0 w-0 absolute top-0 left-0" />
+        <input className="h-0 w-0 absolute top-0 left-0" aria-hidden="true" tabIndex={-1} />
         {children}
       </label>
-    </label>
+    </label>,
+    document.body
   );
 };
 
