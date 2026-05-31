@@ -68,7 +68,7 @@ export const ScaffoldStarkAppWithProviders = ({
         chains={[...appChains]}
         provider={provider}
         explorer={voyager}
-        autoConnect={true}
+        autoConnect={false}
         extraWallets={extraWallets}
       >
         <ScaffoldStarkApp>{children}</ScaffoldStarkApp>
