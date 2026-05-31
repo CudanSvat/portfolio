@@ -115,7 +115,7 @@ export const Header = () => {
   ]);
 
   return (
-    <div className=" lg:static top-0 navbar min-h-0 shrink-0 justify-between z-20 px-0 sm:px-2">
+    <div className="lg:static top-0 navbar min-h-0 shrink-0 justify-between z-20 px-4 py-4 bg-[#070913]/80 border-b border-slate-900/60 backdrop-blur-md shadow-lg">
       <div className="navbar-start w-auto lg:w-1/2 -mr-2">
         <div
           className={`lg:hidden dropdown ${isDrawerOpen ? "dropdown-open" : ""}`}
@@ -147,9 +147,9 @@ export const Header = () => {
         <Link
           href="/"
           passHref
-          className="hidden lg:flex items-center gap-2 ml-4 mr-6 shrink-0"
+          className="hidden lg:flex items-center gap-3 ml-4 mr-6 shrink-0"
         >
-          <div className="flex relative w-10 h-10">
+          <div className="flex relative w-8 h-8">
             <Image
               alt="SE2 logo"
               className="cursor-pointer"
@@ -158,8 +158,8 @@ export const Header = () => {
             />
           </div>
           <div className="flex flex-col">
-            <span className="font-bold leading-tight">Scaffold-Stark</span>
-            <span className="text-xs">Starknet dev stack</span>
+            <span className="font-black text-white text-sm leading-tight tracking-tight">Scaffold-Stark</span>
+            <span className="text-[9px] text-cyan-400 font-bold uppercase tracking-wider">Starknet dev stack</span>
           </div>
         </Link>
         <ul className="hidden lg:flex lg:flex-nowrap menu menu-horizontal px-1 gap-2">
