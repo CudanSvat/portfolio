@@ -366,11 +366,37 @@ const Home = () => {
   const [showAllTokens, setShowAllTokens] = useState(false);
 
   const [userHiddenSymbols, setUserHiddenSymbols] = useState<string[]>(DEFAULT_HIDDEN_SYMBOLS);
+  
+  const [selectedAddresses, setSelectedAddresses] = useState<string[]>([]);
+  const [expandedToken, setExpandedToken] = useState<string | null>(null);
 
   const allAddresses = useMemo(
     () => (connectedAddress ? [connectedAddress, ...secondaryAddresses] : secondaryAddresses),
     [connectedAddress, secondaryAddresses],
   );
+
+  // Sync selectedAddresses when allAddresses list changes
+  useEffect(() => {
+    setSelectedAddresses(prev => {
+      const next = [...prev];
+      let changed = false;
+      for (const addr of allAddresses) {
+        if (!next.includes(addr)) {
+          next.push(addr);
+          changed = true;
+        }
+      }
+      const filtered = next.filter(addr => allAddresses.includes(addr));
+      if (filtered.length !== next.length) {
+        changed = true;
+      }
+      return changed ? filtered : prev;
+    });
+  }, [allAddresses]);
+
+  const activeSelectedAddresses = useMemo(() => {
+    return allAddresses.filter(addr => selectedAddresses.includes(addr));
+  }, [allAddresses, selectedAddresses]);
 
   // Merge, sort by priority, then filter visibility
   const allTokens = useMemo(() => {
@@ -658,8 +684,30 @@ const Home = () => {
     syncToLocalStorage(secondaryAddresses, customTokens, upd, userHiddenSymbols);
   };
 
+  const handleToggleSelectAddress = (addr: string) => {
+    setSelectedAddresses(prev => {
+      const exists = prev.includes(addr);
+      if (exists) {
+        // Don't allow deselecting the last one, to avoid blank screen/errors
+        if (prev.length <= 1) {
+          toast.error("At least one wallet must be selected!");
+          return prev;
+        }
+        return prev.filter(a => a !== addr);
+      }
+      return [...prev, addr];
+    });
+  };
+
+  const handleSoloSelectAddress = (addr: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedAddresses([addr]);
+    toast.success("Isolated single wallet");
+  };
+
   const tokenTotals = allTokens.reduce((acc, t) => {
-    acc[t.symbol] = allAddresses.reduce((s, w) => s + (balances[w]?.[t.symbol] || 0), 0);
+    acc[t.symbol] = activeSelectedAddresses.reduce((s, w) => s + (balances[w]?.[t.symbol] || 0), 0);
     return acc;
   }, {} as Record<string, number>);
 
@@ -829,31 +877,94 @@ const Home = () => {
 
               <div className="space-y-2 max-h-72 overflow-y-auto pr-1 mb-5">
                 {connectedAddress && (
-                  <div className={`p-3 flex justify-between items-center ${tc.rowHover}`}>
-                    <div>
-                      <div className={`text-[8px] uppercase tracking-widest font-black mb-0.5 ${tc.subtext}`}>Primary</div>
-                      <div className="text-xs font-mono font-bold">
-                        {connectedAddress.slice(0, 14)}…{connectedAddress.slice(-8)}
+                  <div
+                    onClick={() => handleToggleSelectAddress(connectedAddress)}
+                    className={`p-3 flex justify-between items-center cursor-pointer transition-all duration-200 ${
+                      selectedAddresses.includes(connectedAddress)
+                        ? "bg-[#C5A880]/10 border border-[#C5A880]/50"
+                        : "opacity-60 hover:opacity-100"
+                    } ${tc.rowHover}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedAddresses.includes(connectedAddress)}
+                        onChange={() => {}} // Controlled by click on parent
+                        className="checkbox checkbox-xs checkbox-primary pointer-events-none"
+                      />
+                      <div>
+                        <div className={`text-[8px] uppercase tracking-widest font-black mb-0.5 ${tc.subtext}`}>Primary</div>
+                        <div className="text-xs font-mono font-bold">
+                          {connectedAddress.slice(0, 14)}…{connectedAddress.slice(-8)}
+                        </div>
                       </div>
                     </div>
-                    <span className={tc.badge}>Active</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => handleSoloSelectAddress(connectedAddress, e)}
+                        className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border border-dashed border-slate-500 hover:border-current hover:bg-[#C5A880]/20 text-slate-400 hover:text-white rounded-sm"
+                        title="Isolate this wallet"
+                      >
+                        Only
+                      </button>
+                      <span className={tc.badge}>Active</span>
+                    </div>
                   </div>
                 )}
                 {secondaryAddresses.map(addr => (
-                  <div key={addr} className={`p-3 flex justify-between items-center group ${tc.rowHover}`}>
-                    <div>
-                      <div className={`text-[8px] uppercase tracking-widest font-black mb-0.5 ${tc.subtext}`}>Tracked</div>
-                      <div className="text-xs font-mono font-bold">
-                        {addr.slice(0, 14)}…{addr.slice(-8)}
+                  <div
+                    key={addr}
+                    onClick={() => handleToggleSelectAddress(addr)}
+                    className={`p-3 flex justify-between items-center cursor-pointer transition-all duration-200 group ${
+                      selectedAddresses.includes(addr)
+                        ? "bg-[#C5A880]/10 border border-[#C5A880]/50"
+                        : "opacity-60 hover:opacity-100"
+                    } ${tc.rowHover}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedAddresses.includes(addr)}
+                        onChange={() => {}} // Controlled by click on parent
+                        className="checkbox checkbox-xs checkbox-primary pointer-events-none"
+                      />
+                      <div>
+                        <div className={`text-[8px] uppercase tracking-widest font-black mb-0.5 ${tc.subtext}`}>Tracked</div>
+                        <div className="text-xs font-mono font-bold">
+                          {addr.slice(0, 14)}…{addr.slice(-8)}
+                        </div>
                       </div>
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => handleCopy(addr)} className={`p-1 ${tc.button}`} title="Copy">
-                        <DocumentDuplicateIcon className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => handleSoloSelectAddress(addr, e)}
+                        className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border border-dashed border-slate-500 hover:border-current hover:bg-[#C5A880]/20 text-slate-400 hover:text-white rounded-sm"
+                        title="Isolate this wallet"
+                      >
+                        Only
                       </button>
-                      <button onClick={() => handleRemoveSecondaryAddress(addr)} className="p-1 hover:text-red-400" title="Remove">
-                        <TrashIcon className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopy(addr);
+                          }}
+                          className={`p-1 ${tc.button}`}
+                          title="Copy"
+                        >
+                          <DocumentDuplicateIcon className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveSecondaryAddress(addr);
+                          }}
+                          className="p-1 hover:text-red-400"
+                          title="Remove"
+                        >
+                          <TrashIcon className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -928,73 +1039,132 @@ const Home = () => {
                     const usd = amt * (prices[token.symbol] || 0);
                     const pricePerToken = prices[token.symbol];
                     return (
-                      <div
-                        key={token.symbol}
-                        className={`flex items-center justify-between p-3.5 transition-all group ${tc.rowHover}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          {/* Token logo */}
-                          {token.logoUri ? (
-                            <img
-                              src={token.logoUri}
-                              alt={token.symbol}
-                              className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                            />
-                          ) : (
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 ${barColors[i % 5]} text-white`}>
-                              {token.symbol.slice(0, 2)}
-                            </div>
-                          )}
-                          <div>
-                            <div className="font-black text-sm leading-tight">{token.symbol}</div>
-                            <div className={`text-[10px] uppercase tracking-wider ${tc.subtext}`}>{token.label}</div>
-                            {pricePerToken ? (
-                              <div className={`text-[9px] ${tc.subtext}`}>${pricePerToken.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} / token</div>
-                            ) : null}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="text-right mr-2">
-                            <div className="font-black text-sm">{amt.toLocaleString(undefined, { maximumFractionDigits: 5 })}</div>
-                            <div className={`text-xs font-bold ${tc.accentText}`}>
-                              ${usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </div>
-                          </div>
-                          
-                          {/* Eye toggle button to Show/Hide token */}
-                          <button
-                            onClick={() => handleToggleHideToken(token.symbol)}
-                            title={userHiddenSymbols.includes(token.symbol) ? "Show Token" : "Hide Token"}
-                            className="opacity-0 group-hover:opacity-100 p-1.5 hover:text-[#C5A880] transition-all"
-                          >
-                            {userHiddenSymbols.includes(token.symbol) ? (
-                              <EyeIcon className="w-4 h-4 text-emerald-500" />
+                      <div key={token.symbol} className="flex flex-col border-b border-slate-800 last:border-0">
+                        <div
+                          onClick={() => setExpandedToken(prev => (prev === token.symbol ? null : token.symbol))}
+                          className={`flex items-center justify-between p-3.5 transition-all group cursor-pointer ${
+                            expandedToken === token.symbol ? "bg-[#C5A880]/5" : ""
+                          } ${tc.rowHover}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            {/* Token logo */}
+                            {token.logoUri ? (
+                              <img
+                                src={token.logoUri}
+                                alt={token.symbol}
+                                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                              />
                             ) : (
-                              <EyeSlashIcon className="w-4 h-4" />
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 ${barColors[i % 5]} text-white`}>
+                                {token.symbol.slice(0, 2)}
+                              </div>
                             )}
-                          </button>
-
-                          {token.isCustom ? (
+                            <div>
+                              <div className="font-black text-sm leading-tight flex items-center gap-1.5">
+                                {token.symbol}
+                                <span className="text-[9px] text-slate-500 font-normal">
+                                  {expandedToken === token.symbol ? "▲ hide breakdown" : "▼ show breakdown"}
+                                </span>
+                              </div>
+                              <div className={`text-[10px] uppercase tracking-wider ${tc.subtext}`}>{token.label}</div>
+                              {pricePerToken ? (
+                                <div className={`text-[9px] ${tc.subtext}`}>${pricePerToken.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} / token</div>
+                              ) : null}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-right mr-2">
+                              <div className="font-black text-sm">{amt.toLocaleString(undefined, { maximumFractionDigits: 5 })}</div>
+                              <div className={`text-xs font-bold ${tc.accentText}`}>
+                                ${usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </div>
+                            </div>
+                            
+                            {/* Eye toggle button to Show/Hide token */}
                             <button
-                              onClick={() => handleRemoveCustomToken(token.symbol)}
-                              title="Delete custom token"
-                              className="opacity-0 group-hover:opacity-100 p-1.5 hover:text-red-400 transition-all"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleHideToken(token.symbol);
+                              }}
+                              title={userHiddenSymbols.includes(token.symbol) ? "Show Token" : "Hide Token"}
+                              className="opacity-0 group-hover:opacity-100 p-1.5 hover:text-[#C5A880] transition-all"
                             >
-                              <TrashIcon className="w-4 h-4" />
+                              {userHiddenSymbols.includes(token.symbol) ? (
+                                <EyeIcon className="w-4 h-4 text-emerald-500" />
+                              ) : (
+                                <EyeSlashIcon className="w-4 h-4" />
+                              )}
                             </button>
-                          ) : null}
 
-                          <a
-                            href={`https://voyager.online/token/${token.address}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            title="View on Voyager"
-                            className={`opacity-0 group-hover:opacity-100 p-1.5 ${tc.subtext} hover:opacity-80 transition-all`}
-                          >
-                            <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                          </a>
+                            {token.isCustom ? (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveCustomToken(token.symbol);
+                                }}
+                                title="Delete custom token"
+                                className="opacity-0 group-hover:opacity-100 p-1.5 hover:text-red-400 transition-all"
+                              >
+                                <TrashIcon className="w-4 h-4" />
+                              </button>
+                            ) : null}
+
+                            <a
+                              href={`https://voyager.online/token/${token.address}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              title="View on Voyager"
+                              className={`opacity-0 group-hover:opacity-100 p-1.5 ${tc.subtext} hover:opacity-80 transition-all`}
+                            >
+                              <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                            </a>
+                          </div>
                         </div>
+
+                        {/* Inline Wallet Distribution Accordion */}
+                        {expandedToken === token.symbol && (
+                          <div className={`px-5 py-4 border-t ${tc.divider} bg-black/25 flex flex-col gap-3 transition-all duration-300`}>
+                            <div className="flex justify-between items-center pb-1.5 border-b border-slate-800">
+                              <span className="text-[9px] uppercase tracking-widest font-black text-slate-400">Wallet Distribution</span>
+                              <span className="text-[9px] font-mono text-slate-500">{activeSelectedAddresses.length} Selected Wallets</span>
+                            </div>
+                            {activeSelectedAddresses.map(addr => {
+                              const wBal = balances[addr]?.[token.symbol] || 0;
+                              const wUsd = wBal * (prices[token.symbol] || 0);
+                              const pct = amt > 0 ? (wBal / amt) * 100 : 0;
+                              const isPrimary = addr === connectedAddress;
+                              
+                              return (
+                                <div key={addr} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs py-1 border-b border-slate-900/50 last:border-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${isPrimary ? "bg-emerald-400" : "bg-blue-400"}`} />
+                                    <span className="font-extrabold text-slate-300">
+                                      {isPrimary ? "Primary Wallet" : "Tracked Wallet"}
+                                    </span>
+                                    <span className="font-mono text-[9px] text-slate-500">
+                                      ({addr.slice(0, 10)}…{addr.slice(-6)})
+                                    </span>
+                                  </div>
+                                  
+                                  <div className="flex items-center justify-between sm:justify-end gap-4">
+                                    <div className="font-bold text-slate-200">
+                                      {wBal.toLocaleString(undefined, { maximumFractionDigits: 5 })}
+                                      <span className="text-slate-500 text-[10px] ml-1.5 font-normal">
+                                        (${wUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+                                      </span>
+                                    </div>
+                                    <div className="w-16 bg-slate-900 h-1.5 rounded-full overflow-hidden flex-shrink-0">
+                                      <div className={`h-full ${isPrimary ? "bg-emerald-400" : "bg-blue-400"}`} style={{ width: `${pct}%` }} />
+                                    </div>
+                                    <span className="text-[10px] font-mono text-slate-400 w-8 text-right font-black">{pct.toFixed(0)}%</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
