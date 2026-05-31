@@ -336,12 +336,32 @@ const Home = () => {
   const [prices, setPrices] = useState<Record<string, number>>({ USDC: 1.00, USDT: 1.00, DAIv0: 1.00, DAI: 1.00 });
   const [avnuTokens, setAvnuTokens] = useState<TokenInfo[]>([]);
   const [isLoadingTokens, setIsLoadingTokens] = useState(true);
+  const [showAllTokens, setShowAllTokens] = useState(false);
+
+  // Priority order — first N symbols appear first, rest are sorted alphabetically
+  const TOKEN_ORDER = ["STRK", "ETH", "WBTC", "USDC", "USDT", "EKUBO", "DAI", "DAIv0", "LORDS", "vSTRK"];
+  const HIDDEN_SYMBOLS = new Set(["ZEND", "SWAY", "UNI", "NSTR", "rETH", "LUSD", "wstETH"]);
 
   const allAddresses = useMemo(
     () => (connectedAddress ? [connectedAddress, ...secondaryAddresses] : secondaryAddresses),
     [connectedAddress, secondaryAddresses],
   );
-  const allTokens = useMemo(() => [...avnuTokens, ...customTokens], [avnuTokens, customTokens]);
+
+  // Merge, sort by priority, then filter visibility
+  const allTokens = useMemo(() => {
+    const merged = [...avnuTokens, ...customTokens];
+    const sorted = merged.sort((a, b) => {
+      const ai = TOKEN_ORDER.indexOf(a.symbol);
+      const bi = TOKEN_ORDER.indexOf(b.symbol);
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
+      return a.symbol.localeCompare(b.symbol);
+    });
+    if (showAllTokens) return sorted;
+    return sorted.filter(t => !HIDDEN_SYMBOLS.has(t.symbol) || t.isCustom);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [avnuTokens, customTokens, showAllTokens]);
 
   useEffect(() => {
     const saved = localStorage.getItem("portfolio_theme") as ThemeVariant;
@@ -860,6 +880,22 @@ const Home = () => {
                     );
                   })}
                 </div>
+
+                {/* Show / hide low-priority tokens toggle */}
+                {!isLoadingTokens && (
+                  <div className={`pt-3 border-t ${tc.divider}`}>
+                    <button
+                      onClick={() => setShowAllTokens(v => !v)}
+                      className={`w-full flex items-center justify-center gap-2 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${tc.navBtnInactive} hover:opacity-100`}
+                    >
+                      {showAllTokens ? (
+                        <>▲ Hide less common tokens</>
+                      ) : (
+                        <>▼ Show {HIDDEN_SYMBOLS.size} more tokens (ZEND, SWAY, UNI…)</>
+                      )}
+                    </button>
+                  </div>
+                )}
 
                 {/* Add Custom Token */}
                 <div className={tc.card}>
