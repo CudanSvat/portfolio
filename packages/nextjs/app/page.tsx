@@ -747,6 +747,26 @@ const Home = () => {
   const barColors = ["bg-amber-400", "bg-purple-500", "bg-emerald-400", "bg-indigo-400", "bg-cyan-400"];
   const normConnectedAddress = connectedAddress ? normalizeAddress(connectedAddress) : "";
 
+  // Donut chart calculations
+  const donutSegments = useMemo(() => {
+    if (totalUSDValue <= 0) return [];
+    let currentOffset = 0;
+    return allTokens.map((t, i) => {
+      const val = (tokenTotals[t.symbol] || 0) * (prices[t.symbol] || 0);
+      const pct = val / totalUSDValue;
+      const strokeDasharray = `${pct * 100} ${100 - pct * 100}`;
+      const strokeDashoffset = 100 - currentOffset + 25; // 25 is offset to start at the top (12 o'clock)
+      currentOffset += pct * 100;
+      return {
+        symbol: t.symbol,
+        pct: pct * 100,
+        dashArray: strokeDasharray,
+        dashOffset: strokeDashoffset,
+        colorHex: i % 5 === 0 ? "#F59E0B" : i % 5 === 1 ? "#A855F7" : i % 5 === 2 ? "#10B981" : i % 5 === 3 ? "#818CF8" : "#06B6D4"
+      };
+    }).filter(s => s.pct > 0);
+  }, [allTokens, tokenTotals, prices, totalUSDValue]);
+
   return (
     <div className={`w-full min-h-screen ${tc.wrapper} transition-all duration-500 pb-24 font-sans`}>
       <Toaster position="bottom-right" />
@@ -875,33 +895,54 @@ const Home = () => {
                 </span>
                 <span className={tc.badge}>{allAddresses.length} linked</span>
               </div>
-              <div className="mb-5">
-                <div className={`text-4xl md:text-5xl font-black leading-none ${tc.heading}`}>
-                  <span className="text-xl">$</span>
-                  {totalUSDValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              
+              <div className="flex flex-col sm:flex-row items-center gap-6 mb-4">
+                {/* SVG Donut Chart */}
+                {totalUSDValue > 0 && donutSegments.length > 0 ? (
+                  <div className="relative w-24 h-24 flex-shrink-0">
+                    <svg viewBox="0 0 42 42" className="w-full h-full transform -rotate-90">
+                      <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="rgba(0,0,0,0.1)" strokeWidth="4.5" />
+                      {donutSegments.map((s) => (
+                        <circle
+                          key={s.symbol}
+                          cx="21"
+                          cy="21"
+                          r="15.915"
+                          fill="transparent"
+                          stroke={s.colorHex}
+                          strokeWidth="4.5"
+                          strokeDasharray={s.dashArray}
+                          strokeDashoffset={s.dashOffset}
+                          className="transition-all duration-500 ease-out"
+                        />
+                      ))}
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-[8px] uppercase tracking-widest opacity-60">Assets</span>
+                      <span className="text-xs font-black font-mono leading-none mt-0.5">{donutSegments.length}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-24 h-24 rounded-full border border-dashed border-slate-700 flex flex-col items-center justify-center flex-shrink-0">
+                    <span className="text-[8px] uppercase tracking-widest opacity-40">Empty</span>
+                  </div>
+                )}
+                
+                {/* Balance & Allocations */}
+                <div className="flex-1 text-center sm:text-left">
+                  <div className={`text-4xl md:text-[40px] font-black leading-none ${tc.heading} mb-2`}>
+                    <span className="text-xl">$</span>
+                    {totalUSDValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <div className="flex flex-wrap justify-center sm:justify-start gap-x-3 gap-y-1">
+                    {donutSegments.map((s) => (
+                      <span key={s.symbol} className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider">
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.colorHex }} />
+                        {s.symbol} {s.pct.toFixed(0)}%
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              {/* Allocation bar */}
-              <div className="h-2 w-full bg-black/20 flex overflow-hidden mb-3">
-                {totalUSDValue > 0
-                  ? allTokens.map((t, i) => {
-                      const val = (tokenTotals[t.symbol] || 0) * (prices[t.symbol] || 0);
-                      const pct = (val / totalUSDValue) * 100;
-                      return pct > 0 ? <div key={t.symbol} className={barColors[i % 5]} style={{ width: `${pct}%` }} /> : null;
-                    })
-                  : <div className="bg-slate-800 w-full" />}
-              </div>
-              <div className="flex flex-wrap gap-x-3 gap-y-1.5">
-                {allTokens.map((t, i) => {
-                  const val = (tokenTotals[t.symbol] || 0) * (prices[t.symbol] || 0);
-                  const pct = totalUSDValue > 0 ? (val / totalUSDValue) * 100 : 0;
-                  return pct > 0 ? (
-                    <span key={t.symbol} className="flex items-center gap-1 text-[10px] font-bold">
-                      <span className={`w-1.5 h-1.5 rounded-full ${barColors[i % 5]}`} />
-                      {t.symbol} {pct.toFixed(0)}%
-                    </span>
-                  ) : null;
-                })}
               </div>
             </div>
 
