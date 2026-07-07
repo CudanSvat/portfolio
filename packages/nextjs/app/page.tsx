@@ -92,7 +92,8 @@ type ThemeVariant =
   | "sakura"
   | "miami"
   | "paper"
-  | "military";
+  | "military"
+  | "starknet";
 
 interface ThemeConfig {
   label: string;
@@ -115,22 +116,22 @@ interface ThemeConfig {
 
 const THEMES: Record<ThemeVariant, ThemeConfig> = {
   obsidian: {
-    label: "Obsidian",
+    label: "Obsidian & Gold",
     emoji: "🖤",
     wrapper: "bg-[#07080C] text-[#E8E9ED]",
-    card: "bg-[#0D0F1B] border border-[#1E2235] p-6",
-    hero: "bg-[#0D0F1B] border-double border-4 border-[#C5A880] p-8",
+    card: "bg-[#0D0F1B] border border-[#1E2235] hover:border-[#C5A880]/30 rounded-xl transition-all duration-300 p-6 shadow-[0_4px_20px_rgba(0,0,0,0.4)]",
+    hero: "bg-[#0D0F1B] border border-[#C5A880]/40 p-8 rounded-2xl shadow-[0_0_40px_rgba(197,168,128,0.03)]",
     accentText: "text-[#C5A880]",
-    accentBg: "bg-[#C5A880] hover:bg-[#B3966E] text-[#07080C] font-bold px-6 py-3",
-    badge: "border border-[#C5A880]/50 text-[#C5A880] bg-[#C5A880]/5 px-3 py-1 text-[10px] font-bold uppercase tracking-wider",
-    input: "bg-[#141724] border border-[#232942] focus:border-[#C5A880]/60 text-white placeholder-slate-600 px-3 py-2.5 text-xs focus:outline-none",
-    button: "border border-[#C5A880]/40 hover:border-[#C5A880] text-[#C5A880] hover:bg-[#C5A880]/10 px-3 py-2.5 transition-all",
-    navBtnActive: "bg-[#C5A880]/10 text-[#C5A880] border border-[#C5A880] px-5 py-2.5",
+    accentBg: "bg-[#C5A880] hover:bg-[#B3966E] text-[#07080C] font-bold px-6 py-3 rounded-lg transition-all",
+    badge: "border border-[#C5A880]/50 text-[#C5A880] bg-[#C5A880]/5 px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md",
+    input: "bg-[#141724] border border-[#232942] focus:border-[#C5A880]/60 text-white placeholder-slate-600 px-3 py-2.5 text-xs focus:outline-none rounded-lg",
+    button: "border border-[#C5A880]/40 hover:border-[#C5A880] text-[#C5A880] hover:bg-[#C5A880]/10 px-3 py-2.5 rounded-lg transition-all",
+    navBtnActive: "bg-[#C5A880]/10 text-[#C5A880] border border-[#C5A880] px-5 py-2.5 rounded-lg",
     navBtnInactive: "text-slate-400 hover:text-[#C5A880] border border-transparent px-5 py-2.5",
-    heading: "font-serif",
+    heading: "font-sans font-black tracking-tight",
     subtext: "text-slate-400",
     divider: "border-[#1E2235]",
-    rowHover: "hover:bg-[#C5A880]/5 hover:border-[#C5A880]/30 border border-[#1E2235]",
+    rowHover: "hover:bg-[#C5A880]/5 hover:border-[#C5A880]/30 border border-[#1E2235] rounded-xl transition-all duration-200",
   },
   brutalist: {
     label: "Brutalist",
@@ -151,7 +152,7 @@ const THEMES: Record<ThemeVariant, ThemeConfig> = {
     rowHover: "hover:bg-[#F5C400]/20 border-[2px] border-black",
   },
   cyber: {
-    label: "Cyber",
+    label: "Cyber Green",
     emoji: "💚",
     wrapper: "bg-[#010101] text-[#00FF66] font-mono",
     card: "bg-[#030505] border border-[#00FF66]/25 p-6",
@@ -187,22 +188,22 @@ const THEMES: Record<ThemeVariant, ThemeConfig> = {
     rowHover: "hover:bg-[#F5F5F5] hover:border-[#CCCCCC] border border-[#E5E5E5] rounded-lg",
   },
   aurora: {
-    label: "Aurora",
+    label: "Frosted Glassmorphism",
     emoji: "🌌",
-    wrapper: "bg-[#05091A] text-[#E2E8F7]",
-    card: "bg-gradient-to-br from-[#0D1030] to-[#0A1528] border border-[#2A3060] p-6",
-    hero: "bg-gradient-to-r from-[#1A0A3C] via-[#0D1E40] to-[#0A2828] border border-[#4A3080]/50 p-8",
-    accentText: "text-[#A78BFA]",
-    accentBg: "bg-gradient-to-r from-[#7C3AED] to-[#0EA5E9] hover:from-[#6D28D9] hover:to-[#0284C7] text-white px-6 py-3 font-semibold shadow-lg",
+    wrapper: "bg-[#050714] text-[#E2E8F7]",
+    card: "bg-[#0D1030]/40 backdrop-blur-xl border border-[#2A3060]/50 p-6 rounded-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] hover:border-[#7C3AED]/40 transition-all duration-300",
+    hero: "bg-gradient-to-r from-[#1A0A3C]/40 via-[#0D1E40]/30 to-[#0A2828]/30 backdrop-blur-xl border border-[#4A3080]/40 p-8 rounded-3xl shadow-[0_8px_32px_rgba(124,58,237,0.05)]",
+    accentText: "text-[#A78BFA] drop-shadow-[0_0_8px_rgba(167,139,250,0.3)]",
+    accentBg: "bg-gradient-to-r from-[#7C3AED] to-[#0EA5E9] hover:from-[#6D28D9] hover:to-[#0284C7] text-white px-6 py-3 font-semibold rounded-xl shadow-lg transition-all duration-300",
     badge: "bg-[#7C3AED]/20 border border-[#7C3AED]/40 text-[#A78BFA] px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full",
-    input: "bg-[#0A0E25] border border-[#2A3060] focus:border-[#7C3AED]/60 text-white placeholder-slate-600 px-3 py-2.5 text-xs focus:outline-none rounded-lg",
-    button: "border border-[#7C3AED]/40 hover:border-[#7C3AED] text-[#A78BFA] hover:bg-[#7C3AED]/15 px-3 py-2.5 rounded-lg transition-all",
-    navBtnActive: "bg-gradient-to-r from-[#7C3AED]/30 to-[#0EA5E9]/20 border border-[#7C3AED]/60 text-[#A78BFA] px-5 py-2.5 rounded-lg",
+    input: "bg-[#0A0E25]/60 backdrop-blur-md border border-[#2A3060] focus:border-[#7C3AED]/60 text-white placeholder-slate-600 px-3 py-2.5 text-xs focus:outline-none rounded-xl",
+    button: "border border-[#7C3AED]/40 hover:border-[#7C3AED] text-[#A78BFA] hover:bg-[#7C3AED]/15 px-3 py-2.5 rounded-xl transition-all",
+    navBtnActive: "bg-gradient-to-r from-[#7C3AED]/30 to-[#0EA5E9]/20 border border-[#7C3AED]/60 text-[#A78BFA] px-5 py-2.5 rounded-xl",
     navBtnInactive: "text-slate-500 hover:text-[#A78BFA] border border-transparent px-5 py-2.5",
     heading: "font-bold tracking-tight bg-gradient-to-r from-[#A78BFA] to-[#38BDF8] bg-clip-text text-transparent",
     subtext: "text-slate-500",
-    divider: "border-[#2A3060]",
-    rowHover: "hover:bg-[#7C3AED]/10 hover:border-[#7C3AED]/40 border border-[#2A3060] rounded-lg",
+    divider: "border-[#2A3060]/50",
+    rowHover: "hover:bg-[#7C3AED]/10 hover:border-[#7C3AED]/40 border border-[#2A3060]/30 rounded-2xl transition-all duration-200",
   },
   noir: {
     label: "Noir",
@@ -329,6 +330,24 @@ const THEMES: Record<ThemeVariant, ThemeConfig> = {
     subtext: "text-[#3A4A28]",
     divider: "border-[#2E3A20]",
     rowHover: "hover:bg-[#6B8C42]/8 hover:border-[#6B8C42]/40 border border-[#2E3A20]",
+  },
+  starknet: {
+    label: "Cyber Starknet",
+    emoji: "🔴",
+    wrapper: "bg-[#000000] text-[#FF3E3E] font-mono",
+    card: "bg-[#080808] border border-[#FF3E3E]/20 p-6 shadow-[0_0_15px_rgba(255,62,62,0.05)]",
+    hero: "bg-[#050505] border-2 border-dashed border-[#FF3E3E] p-8",
+    accentText: "text-[#FF3E3E]",
+    accentBg: "bg-[#FF3E3E] hover:bg-[#D93030] text-black font-extrabold px-6 py-3 tracking-widest uppercase shadow-[0_0_20px_rgba(255,62,62,0.35)]",
+    badge: "border border-[#FF3E3E]/50 text-[#FF3E3E] bg-[#FF3E3E]/5 px-3 py-1 text-[10px] font-bold uppercase tracking-widest",
+    input: "bg-[#0C0C0C] border border-[#FF3E3E]/30 focus:border-[#FF3E3E] text-white placeholder-red-950/40 px-3 py-2.5 text-xs focus:outline-none",
+    button: "border border-[#FF3E3E]/40 hover:border-[#FF3E3E] text-[#FF3E3E] hover:bg-[#FF3E3E]/10 px-3 py-2.5 transition-all font-bold tracking-wide uppercase text-[10px]",
+    navBtnActive: "border border-[#FF3E3E] text-[#FF3E3E] bg-[#FF3E3E]/10 px-5 py-2.5 font-bold tracking-wide uppercase text-[10px]",
+    navBtnInactive: "text-red-950/60 hover:text-[#FF3E3E] border border-transparent px-5 py-2.5 font-bold tracking-wide uppercase text-[10px]",
+    heading: "font-mono uppercase tracking-widest",
+    subtext: "text-red-950/50",
+    divider: "border-[#FF3E3E]/20",
+    rowHover: "hover:bg-[#FF3E3E]/5 hover:border-[#FF3E3E]/45 border border-[#FF3E3E]/15",
   },
 };
 
@@ -732,17 +751,23 @@ const Home = () => {
     <div className={`w-full min-h-screen ${tc.wrapper} transition-all duration-500 pb-24 font-sans`}>
       <Toaster position="bottom-right" />
 
-      {/* Aurora subtle ambient — only for aurora/miami themes */}
+      {/* Aurora subtle ambient — only for aurora/miami/starknet themes */}
       {activeTheme === "aurora" && (
         <>
-          <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-purple-700/8 blur-[150px] rounded-full pointer-events-none" />
-          <div className="fixed bottom-0 right-1/4 w-[400px] h-[400px] bg-cyan-500/6 blur-[150px] rounded-full pointer-events-none" />
+          <div className="fixed top-[-100px] left-1/4 w-[500px] h-[500px] bg-[#7C3AED]/12 blur-[150px] rounded-full pointer-events-none animate-pulse duration-[8000ms]" />
+          <div className="fixed bottom-[-100px] right-1/4 w-[400px] h-[400px] bg-[#0EA5E9]/10 blur-[150px] rounded-full pointer-events-none animate-pulse duration-[6000ms]" />
         </>
       )}
       {activeTheme === "miami" && (
         <>
           <div className="fixed top-0 right-0 w-[600px] h-[600px] bg-pink-600/8 blur-[180px] rounded-full pointer-events-none" />
           <div className="fixed bottom-0 left-0 w-[400px] h-[400px] bg-cyan-500/6 blur-[150px] rounded-full pointer-events-none" />
+        </>
+      )}
+      {activeTheme === "starknet" && (
+        <>
+          <div className="fixed top-[-100px] left-1/3 w-[600px] h-[600px] bg-red-600/8 blur-[180px] rounded-full pointer-events-none" />
+          <div className="fixed bottom-[-50px] right-1/4 w-[450px] h-[450px] bg-red-950/20 blur-[150px] rounded-full pointer-events-none" />
         </>
       )}
 
