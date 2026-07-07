@@ -337,6 +337,14 @@ const ALL_THEMES = Object.keys(THEMES) as ThemeVariant[];
 const DEFAULT_HIDDEN_SYMBOLS = ["ZEND", "SWAY", "UNI", "NSTR", "rETH", "LUSD", "wstETH"];
 const TOKEN_ORDER = ["STRK", "ETH", "WBTC", "USDC", "USDT", "EKUBO", "SLAY", "SCHIZODIO", "BROTHER", "DAI", "DAIv0", "LORDS", "vSTRK"];
 
+const normalizeAddress = (addr: string): string => {
+  const cleaned = addr.trim().toLowerCase();
+  if (/^0x[0-9a-fA-F]{1,64}$/.test(cleaned)) {
+    return cleaned.length < 66 ? "0x" + cleaned.slice(2).padStart(64, "0") : cleaned;
+  }
+  return cleaned;
+};
+
 const Home = () => {
   const { address: connectedAddress } = useAccount();
   const { provider } = useProvider();
@@ -370,10 +378,10 @@ const Home = () => {
   const [selectedAddresses, setSelectedAddresses] = useState<string[]>([]);
   const [expandedToken, setExpandedToken] = useState<string | null>(null);
 
-  const allAddresses = useMemo(
-    () => (connectedAddress ? [connectedAddress, ...secondaryAddresses] : secondaryAddresses),
-    [connectedAddress, secondaryAddresses],
-  );
+  const allAddresses = useMemo(() => {
+    const list = connectedAddress ? [connectedAddress, ...secondaryAddresses] : secondaryAddresses;
+    return list.map(normalizeAddress);
+  }, [connectedAddress, secondaryAddresses]);
 
   // Sync selectedAddresses when allAddresses list changes
   useEffect(() => {
@@ -441,7 +449,7 @@ const Home = () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setSecondaryAddresses(parsed.secondaryAddresses || []);
+        setSecondaryAddresses((parsed.secondaryAddresses || []).map(normalizeAddress));
         setCustomTokens(parsed.customTokens || DEFAULT_CUSTOM_TOKENS);
         setCustomNFTs(parsed.customNFTs || []);
         setUserHiddenSymbols(parsed.userHiddenSymbols || DEFAULT_HIDDEN_SYMBOLS);
@@ -625,8 +633,8 @@ const Home = () => {
     if (!connectedAddress) { toast.error("Connect your wallet first!"); return; }
     const cleaned = newSecAddress.trim().toLowerCase();
     if (!/^0x[0-9a-fA-F]{1,64}$/.test(cleaned)) { toast.error("Invalid address format!"); return; }
-    const formatted = cleaned.length < 66 ? "0x" + cleaned.slice(2).padStart(64, "0") : cleaned;
-    if (allAddresses.some(a => a.toLowerCase() === formatted)) { toast.error("Already tracked!"); return; }
+    const formatted = normalizeAddress(cleaned);
+    if (allAddresses.some(a => normalizeAddress(a) === formatted)) { toast.error("Already tracked!"); return; }
     const upd = [...secondaryAddresses, formatted];
     setSecondaryAddresses(upd);
     syncToLocalStorage(upd, customTokens, customNFTs, userHiddenSymbols);
@@ -635,7 +643,8 @@ const Home = () => {
   };
 
   const handleRemoveSecondaryAddress = (addr: string) => {
-    const upd = secondaryAddresses.filter(a => a !== addr);
+    const normToRemove = normalizeAddress(addr);
+    const upd = secondaryAddresses.filter(a => normalizeAddress(a) !== normToRemove);
     setSecondaryAddresses(upd);
     syncToLocalStorage(upd, customTokens, customNFTs, userHiddenSymbols);
     toast.success("Wallet removed");
@@ -685,24 +694,26 @@ const Home = () => {
   };
 
   const handleToggleSelectAddress = (addr: string) => {
+    const norm = normalizeAddress(addr);
     setSelectedAddresses(prev => {
-      const exists = prev.includes(addr);
+      const exists = prev.includes(norm);
       if (exists) {
         // Don't allow deselecting the last one, to avoid blank screen/errors
         if (prev.length <= 1) {
           toast.error("At least one wallet must be selected!");
           return prev;
         }
-        return prev.filter(a => a !== addr);
+        return prev.filter(a => a !== norm);
       }
-      return [...prev, addr];
+      return [...prev, norm];
     });
   };
 
   const handleSoloSelectAddress = (addr: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setSelectedAddresses([addr]);
+    const norm = normalizeAddress(addr);
+    setSelectedAddresses([norm]);
     toast.success("Isolated single wallet");
   };
 
@@ -715,6 +726,7 @@ const Home = () => {
 
   const tc = THEMES[activeTheme];
   const barColors = ["bg-amber-400", "bg-purple-500", "bg-emerald-400", "bg-indigo-400", "bg-cyan-400"];
+  const normConnectedAddress = connectedAddress ? normalizeAddress(connectedAddress) : "";
 
   return (
     <div className={`w-full min-h-screen ${tc.wrapper} transition-all duration-500 pb-24 font-sans`}>
@@ -876,11 +888,11 @@ const Home = () => {
               </h3>
 
               <div className="space-y-2 max-h-72 overflow-y-auto pr-1 mb-5">
-                {connectedAddress && (
+                {normConnectedAddress && (
                   <div
-                    onClick={() => handleToggleSelectAddress(connectedAddress)}
+                    onClick={() => handleToggleSelectAddress(normConnectedAddress)}
                     className={`p-3 flex justify-between items-center cursor-pointer transition-all duration-200 ${
-                      selectedAddresses.includes(connectedAddress)
+                      selectedAddresses.includes(normConnectedAddress)
                         ? "bg-[#C5A880]/10 border border-[#C5A880]/50"
                         : "opacity-60 hover:opacity-100"
                     } ${tc.rowHover}`}
@@ -888,20 +900,20 @@ const Home = () => {
                     <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
-                        checked={selectedAddresses.includes(connectedAddress)}
+                        checked={selectedAddresses.includes(normConnectedAddress)}
                         onChange={() => {}} // Controlled by click on parent
                         className="checkbox checkbox-xs checkbox-primary pointer-events-none"
                       />
                       <div>
                         <div className={`text-[8px] uppercase tracking-widest font-black mb-0.5 ${tc.subtext}`}>Primary</div>
                         <div className="text-xs font-mono font-bold">
-                          {connectedAddress.slice(0, 14)}…{connectedAddress.slice(-8)}
+                          {normConnectedAddress.slice(0, 14)}…{normConnectedAddress.slice(-8)}
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={(e) => handleSoloSelectAddress(connectedAddress, e)}
+                        onClick={(e) => handleSoloSelectAddress(normConnectedAddress, e)}
                         className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border border-dashed border-slate-500 hover:border-current hover:bg-[#C5A880]/20 text-slate-400 hover:text-white rounded-sm"
                         title="Isolate this wallet"
                       >
