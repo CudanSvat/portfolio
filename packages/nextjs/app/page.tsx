@@ -816,216 +816,114 @@ const Home = () => {
           </div>
         )}
 
-        {/* ── HERO HEADER ── */}
-        <div className={`${tc.hero} mb-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6`}>
+        {/* ── HEADER ── */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className={`text-[10px] tracking-widest font-black uppercase ${tc.subtext}`}>
-                Live Mainnet · Multi-Address Tracker
-              </span>
-            </div>
-            <h1 className={`text-3xl md:text-5xl font-black leading-none mb-2 ${tc.heading}`}>
+            <h1 className={`text-2xl md:text-3xl font-black leading-none tracking-tight ${tc.heading}`}>
               Starknet Portfolio
             </h1>
-            <p className={`text-xs max-w-lg ${tc.subtext}`}>
-              Monitor multiple Starknet wallets simultaneously. Track ERC-20 balances, custom tokens, and NFT holdings.
+            <p className={`text-[10px] uppercase font-black tracking-widest mt-1.5 ${tc.subtext}`}>
+              Multi-Wallet asset tracker
             </p>
           </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-            {connectedAddress && (
-              <div className={`flex items-center gap-3 px-4 py-3 border ${tc.divider} bg-transparent`}>
-                <div>
-                  <div className={`text-[8px] uppercase tracking-widest font-black mb-0.5 ${tc.subtext}`}>Connected</div>
-                  <div className="text-xs font-mono font-bold">
-                    {connectedAddress.slice(0, 8)}…{connectedAddress.slice(-6)}
-                  </div>
-                </div>
-                <button onClick={() => handleCopy(connectedAddress)} className={`p-1.5 ${tc.button}`}>
-                  {copiedText === connectedAddress
-                    ? <CheckIcon className="w-3.5 h-3.5 text-emerald-400" />
-                    : <DocumentDuplicateIcon className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-            )}
-            <button
-              onClick={fetchAllBalances}
-              disabled={isLoading}
-              className={`flex items-center justify-center gap-2 ${tc.accentBg} transition-all disabled:opacity-50`}
-            >
-              <ArrowPathIcon className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-              {isLoading ? "Syncing…" : "Sync Balances"}
-            </button>
-          </div>
+          <button
+            onClick={() => setShowThemePicker(p => !p)}
+            className={`text-xs font-bold uppercase tracking-wider px-4 py-2.5 ${tc.button}`}
+          >
+            {showThemePicker ? "▲ Close Lab" : "▼ Design Lab"}
+          </button>
         </div>
 
         {/* ── MAIN GRID ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch mb-6">
 
-          {/* LEFT — Portfolio summary + wallet registry */}
-          <div className="flex flex-col gap-6">
-
-            {/* Net Worth Card */}
-            <div className={tc.card}>
-              <div className="flex justify-between items-center mb-5">
-                <span className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-1.5 ${tc.accentText}`}>
-                  <WalletIcon className="w-4 h-4" />
-                  Total Net Worth
-                </span>
-                <span className={tc.badge}>{allAddresses.length} linked</span>
-              </div>
-              <div className="mb-5">
-                <div className={`text-4xl md:text-5xl font-black leading-none ${tc.heading}`}>
-                  <span className="text-xl">$</span>
-                  {totalUSDValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </div>
-              </div>
-              {/* Allocation bar */}
-              <div className="h-2 w-full bg-black/20 flex overflow-hidden mb-3">
-                {totalUSDValue > 0
-                  ? allTokens.map((t, i) => {
-                      const val = (tokenTotals[t.symbol] || 0) * (prices[t.symbol] || 0);
-                      const pct = (val / totalUSDValue) * 100;
-                      return pct > 0 ? <div key={t.symbol} className={barColors[i % 5]} style={{ width: `${pct}%` }} /> : null;
-                    })
-                  : <div className="bg-slate-800 w-full" />}
-              </div>
-              <div className="flex flex-wrap gap-x-3 gap-y-1.5">
-                {allTokens.map((t, i) => {
-                  const val = (tokenTotals[t.symbol] || 0) * (prices[t.symbol] || 0);
-                  const pct = totalUSDValue > 0 ? (val / totalUSDValue) * 100 : 0;
-                  return pct > 0 ? (
-                    <span key={t.symbol} className="flex items-center gap-1 text-[10px] font-bold">
-                      <span className={`w-1.5 h-1.5 rounded-full ${barColors[i % 5]}`} />
-                      {t.symbol} {pct.toFixed(0)}%
-                    </span>
-                  ) : null;
-                })}
+          {/* ROW 1: Net Worth + Status Card */}
+          {/* Net Worth Card (spans 2 columns on desktop) */}
+          <div className={`${tc.card} lg:col-span-2 flex flex-col justify-between`}>
+            <div className="flex justify-between items-center mb-5">
+              <span className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-1.5 ${tc.accentText}`}>
+                <WalletIcon className="w-4 h-4" />
+                Total Net Worth
+              </span>
+              <span className={tc.badge}>{allAddresses.length} linked</span>
+            </div>
+            <div className="mb-5">
+              <div className={`text-4xl md:text-5xl font-black leading-none ${tc.heading}`}>
+                <span className="text-xl">$</span>
+                {totalUSDValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
-
-            {/* Linked Wallets Card */}
-            <div className={tc.card}>
-              <h3 className={`text-[10px] uppercase font-black tracking-widest mb-5 flex items-center gap-1.5 ${tc.accentText}`}>
-                <CircleStackIcon className="w-4 h-4" />
-                Linked Wallets
-              </h3>
-
-              <div className="space-y-2 max-h-72 overflow-y-auto pr-1 mb-5">
-                {normConnectedAddress && (
-                  <div
-                    onClick={() => handleToggleSelectAddress(normConnectedAddress)}
-                    className={`p-3 flex justify-between items-center cursor-pointer transition-all duration-200 ${
-                      selectedAddresses.includes(normConnectedAddress)
-                        ? "bg-[#C5A880]/10 border border-[#C5A880]/50"
-                        : "opacity-60 hover:opacity-100"
-                    } ${tc.rowHover}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedAddresses.includes(normConnectedAddress)}
-                        onChange={() => {}} // Controlled by click on parent
-                        className="checkbox checkbox-xs checkbox-primary pointer-events-none"
-                      />
-                      <div>
-                        <div className={`text-[8px] uppercase tracking-widest font-black mb-0.5 ${tc.subtext}`}>Primary</div>
-                        <div className="text-xs font-mono font-bold">
-                          {normConnectedAddress.slice(0, 14)}…{normConnectedAddress.slice(-8)}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={(e) => handleSoloSelectAddress(normConnectedAddress, e)}
-                        className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border border-dashed border-slate-500 hover:border-current hover:bg-[#C5A880]/20 text-slate-400 hover:text-white rounded-sm"
-                        title="Isolate this wallet"
-                      >
-                        Only
-                      </button>
-                      <span className={tc.badge}>Active</span>
-                    </div>
-                  </div>
-                )}
-                {secondaryAddresses.map(addr => (
-                  <div
-                    key={addr}
-                    onClick={() => handleToggleSelectAddress(addr)}
-                    className={`p-3 flex justify-between items-center cursor-pointer transition-all duration-200 group ${
-                      selectedAddresses.includes(addr)
-                        ? "bg-[#C5A880]/10 border border-[#C5A880]/50"
-                        : "opacity-60 hover:opacity-100"
-                    } ${tc.rowHover}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedAddresses.includes(addr)}
-                        onChange={() => {}} // Controlled by click on parent
-                        className="checkbox checkbox-xs checkbox-primary pointer-events-none"
-                      />
-                      <div>
-                        <div className={`text-[8px] uppercase tracking-widest font-black mb-0.5 ${tc.subtext}`}>Tracked</div>
-                        <div className="text-xs font-mono font-bold">
-                          {addr.slice(0, 14)}…{addr.slice(-8)}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={(e) => handleSoloSelectAddress(addr, e)}
-                        className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border border-dashed border-slate-500 hover:border-current hover:bg-[#C5A880]/20 text-slate-400 hover:text-white rounded-sm"
-                        title="Isolate this wallet"
-                      >
-                        Only
-                      </button>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCopy(addr);
-                          }}
-                          className={`p-1 ${tc.button}`}
-                          title="Copy"
-                        >
-                          <DocumentDuplicateIcon className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveSecondaryAddress(addr);
-                          }}
-                          className="p-1 hover:text-red-400"
-                          title="Remove"
-                        >
-                          <TrashIcon className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <form onSubmit={handleAddSecondaryAddress} className={`pt-4 border-t ${tc.divider}`}>
-                <div className={`text-[8px] uppercase tracking-widest font-black mb-2 ${tc.subtext}`}>Link Another Wallet</div>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="0x04718…"
-                    value={newSecAddress}
-                    onChange={e => setNewSecAddress(e.target.value)}
-                    className={`flex-1 ${tc.input}`}
-                  />
-                  <button type="submit" className={tc.button}>
-                    <PlusIcon className="w-4 h-4" />
-                  </button>
-                </div>
-              </form>
+            {/* Allocation bar */}
+            <div className="h-2.5 w-full bg-black/20 flex overflow-hidden mb-4 rounded-full">
+              {totalUSDValue > 0
+                ? allTokens.map((t, i) => {
+                    const val = (tokenTotals[t.symbol] || 0) * (prices[t.symbol] || 0);
+                    const pct = (val / totalUSDValue) * 100;
+                    return pct > 0 ? <div key={t.symbol} className={barColors[i % 5]} style={{ width: `${pct}%` }} /> : null;
+                  })
+                : <div className="bg-slate-800 w-full" />}
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-2">
+              {allTokens.map((t, i) => {
+                const val = (tokenTotals[t.symbol] || 0) * (prices[t.symbol] || 0);
+                const pct = totalUSDValue > 0 ? (val / totalUSDValue) * 100 : 0;
+                return pct > 0 ? (
+                  <span key={t.symbol} className="flex items-center gap-1.5 text-[10px] font-bold">
+                    <span className={`w-2 h-2 rounded-full ${barColors[i % 5]}`} />
+                    {t.symbol} {pct.toFixed(1)}%
+                  </span>
+                ) : null;
+              })}
             </div>
           </div>
 
-          {/* RIGHT — Asset tabs */}
+          {/* Connection Status & Actions Card (spans 1 column on desktop) */}
+          <div className={`${tc.card} lg:col-span-1 flex flex-col justify-between`}>
+            <div className="flex justify-between items-center mb-5">
+              <span className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-1.5 ${tc.accentText}`}>
+                <SparklesIcon className="w-4 h-4" />
+                Network Status
+              </span>
+              <span className={tc.badge}>Mainnet</span>
+            </div>
+            <div className="space-y-4 flex-1 flex flex-col justify-end">
+              {normConnectedAddress ? (
+                <div className={`p-3 border ${tc.divider} bg-black/10 rounded-xl flex justify-between items-center`}>
+                  <div>
+                    <div className={`text-[8px] uppercase tracking-widest font-black mb-0.5 ${tc.subtext}`}>Linked Primary</div>
+                    <div className="text-xs font-mono font-bold">
+                      {normConnectedAddress.slice(0, 10)}…{normConnectedAddress.slice(-8)}
+                    </div>
+                  </div>
+                  <button onClick={() => handleCopy(normConnectedAddress)} className={`p-1.5 ${tc.button}`}>
+                    {copiedText === normConnectedAddress
+                      ? <CheckIcon className="w-3.5 h-3.5 text-emerald-400" />
+                      : <DocumentDuplicateIcon className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              ) : (
+                <div className={`p-3 border border-dashed ${tc.divider} text-center rounded-xl`}>
+                  <span className={`text-xs ${tc.subtext}`}>No primary wallet connected</span>
+                </div>
+              )}
+              
+              <button
+                onClick={fetchAllBalances}
+                disabled={isLoading}
+                className={`w-full flex items-center justify-center gap-2 py-3.5 ${tc.accentBg} transition-all disabled:opacity-50 text-xs font-bold tracking-wider`}
+              >
+                <ArrowPathIcon className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+                {isLoading ? "REFRESHING BALANCES…" : "REFRESH BALANCES"}
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        {/* ── ROW 2 GRID ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+          {/* LEFT — Asset tabs */}
           <div className="lg:col-span-2 flex flex-col gap-6">
 
             {/* Tab bar */}
@@ -1317,6 +1215,128 @@ const Home = () => {
             )}
           </div>
         </div>
+
+        {/* RIGHT — Linked Wallets Card (spans 1 column on desktop) */}
+        <div className="lg:col-span-1 flex flex-col gap-6">
+          <div className={tc.card}>
+            <h3 className={`text-[10px] uppercase font-black tracking-widest mb-5 flex items-center gap-1.5 ${tc.accentText}`}>
+              <CircleStackIcon className="w-4 h-4" />
+              Linked Wallets
+            </h3>
+
+            <div className="space-y-2 max-h-72 overflow-y-auto pr-1 mb-5">
+              {normConnectedAddress && (
+                <div
+                  onClick={() => handleToggleSelectAddress(normConnectedAddress)}
+                  className={`p-3 flex justify-between items-center cursor-pointer transition-all duration-200 ${
+                    selectedAddresses.includes(normConnectedAddress)
+                      ? "bg-[#C5A880]/10 border border-[#C5A880]/50"
+                      : "opacity-60 hover:opacity-100"
+                  } ${tc.rowHover}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedAddresses.includes(normConnectedAddress)}
+                      onChange={() => {}} // Controlled by click on parent
+                      className="checkbox checkbox-xs checkbox-primary pointer-events-none"
+                    />
+                    <div>
+                      <div className={`text-[8px] uppercase tracking-widest font-black mb-0.5 ${tc.subtext}`}>Primary</div>
+                      <div className="text-xs font-mono font-bold">
+                        {normConnectedAddress.slice(0, 14)}…{normConnectedAddress.slice(-8)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => handleSoloSelectAddress(normConnectedAddress, e)}
+                      className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border border-dashed border-slate-500 hover:border-current hover:bg-[#C5A880]/20 text-slate-400 hover:text-white rounded-sm"
+                      title="Isolate this wallet"
+                    >
+                      Only
+                    </button>
+                    <span className={tc.badge}>Active</span>
+                  </div>
+                </div>
+              )}
+              {secondaryAddresses.map(addr => (
+                <div
+                  key={addr}
+                  onClick={() => handleToggleSelectAddress(addr)}
+                  className={`p-3 flex justify-between items-center cursor-pointer transition-all duration-200 group ${
+                    selectedAddresses.includes(addr)
+                      ? "bg-[#C5A880]/10 border border-[#C5A880]/50"
+                      : "opacity-60 hover:opacity-100"
+                  } ${tc.rowHover}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedAddresses.includes(addr)}
+                      onChange={() => {}} // Controlled by click on parent
+                      className="checkbox checkbox-xs checkbox-primary pointer-events-none"
+                    />
+                    <div>
+                      <div className={`text-[8px] uppercase tracking-widest font-black mb-0.5 ${tc.subtext}`}>Tracked</div>
+                      <div className="text-xs font-mono font-bold">
+                        {addr.slice(0, 14)}…{addr.slice(-8)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => handleSoloSelectAddress(addr, e)}
+                      className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border border-dashed border-slate-500 hover:border-current hover:bg-[#C5A880]/20 text-slate-400 hover:text-white rounded-sm"
+                      title="Isolate this wallet"
+                    >
+                      Only
+                    </button>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCopy(addr);
+                        }}
+                        className={`p-1 ${tc.button}`}
+                        title="Copy"
+                      >
+                        <DocumentDuplicateIcon className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveSecondaryAddress(addr);
+                        }}
+                        className="p-1 hover:text-red-400"
+                        title="Remove"
+                      >
+                        <TrashIcon className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <form onSubmit={handleAddSecondaryAddress} className={`pt-4 border-t ${tc.divider}`}>
+              <div className={`text-[8px] uppercase tracking-widest font-black mb-2 ${tc.subtext}`}>Link Another Wallet</div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="0x04718…"
+                  value={newSecAddress}
+                  onChange={e => setNewSecAddress(e.target.value)}
+                  className={`flex-1 ${tc.input}`}
+                />
+                <button type="submit" className={tc.button}>
+                  <PlusIcon className="w-4 h-4" />
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
       </div>
     </div>
   );
