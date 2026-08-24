@@ -27,7 +27,7 @@ export const useAutoConnect = (): void => {
     "wasDisconnectedManually",
   );
 
-  const { connect, connectors } = useConnect();
+  const { connect, connectAsync, connectors } = useConnect();
   const { status } = useAccount();
 
   const hasAutoConnected = useRef(false);
@@ -60,10 +60,17 @@ export const useAutoConnect = (): void => {
 
     if (shouldReconnect) {
       hasAutoConnected.current = true;
-      connect({ connector });
+      connectAsync({ connector }).catch((err) => {
+        console.warn("Auto-connect rejected or cancelled:", err);
+        try {
+          localStorage.removeItem("lastUsedConnector");
+          localStorage.removeItem("lastConnectionTime");
+        } catch {}
+      });
     }
   }, [
     connect,
+    connectAsync,
     connectors,
     savedConnector,
     lastConnectionTime,

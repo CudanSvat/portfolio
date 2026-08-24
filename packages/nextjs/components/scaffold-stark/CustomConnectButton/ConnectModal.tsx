@@ -57,7 +57,7 @@ const ConnectModal = () => {
     setIsOpen(false);
   };
 
-  function handleConnectWallet(
+  async function handleConnectWallet(
     e: React.MouseEvent<HTMLButtonElement>,
     connector: WalletConnector,
   ) {
@@ -68,11 +68,21 @@ const ConnectModal = () => {
       setIsBurnerWallet(true);
       return;
     }
-    setWasDisconnectedManually(false);
-    connect({ connector });
-    setLastConnector({ id: connector.name });
-    setLastConnectionTime(Date.now());
     handleCloseModal();
+    try {
+      await connectAsync({ connector });
+      setWasDisconnectedManually(false);
+      setLastConnector({ id: connector.name });
+      setLastConnectionTime(Date.now());
+    } catch (err) {
+      console.warn("Wallet connection cancelled or rejected:", err);
+      setWasDisconnectedManually(true);
+      setLastConnector({ id: "" });
+      try {
+        localStorage.removeItem("lastUsedConnector");
+        localStorage.removeItem("lastConnectionTime");
+      } catch {}
+    }
   }
 
   async function handleConnectBurner(
